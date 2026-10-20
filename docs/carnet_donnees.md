@@ -1,6 +1,6 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 19/10/2026. Les mentions *à compléter* signalent ce que je n'ai pas encore vérifié.
+Mis à jour le 20/10/2026. Les mentions *à compléter* signalent ce que je n'ai pas encore vérifié.
 
 ## 1. Feuilles de bananier — Tanzanie 2023 (Harvard Dataverse)
 
@@ -48,14 +48,27 @@ Mis à jour le 19/10/2026. Les mentions *à compléter* signalent ce que je n'ai
 
 ## 5. Images satellite — Sentinel-2 (Copernicus)
 
-- **Provenance** : [Copernicus Browser](https://browser.dataspace.copernicus.eu/), produits de niveau L2A (corrigés de l'atmosphère). Sites : *à compléter* (2 bananeraies dans 2 pays).
+- **Provenance** : [Copernicus Browser](https://browser.dataspace.copernicus.eu/), produits de niveau L2A (corrigés de l'atmosphère), téléchargés le 20/10/2026. Deux bananeraies industrielles dans deux pays, identifiées au préalable sur une imagerie satellite haute résolution :
+    - **Équateur**, El Guabo (province d'El Oro) : longitude -79.8463 à -79.8272, latitude -3.1623 à -3.1497 ;
+    - **Cameroun**, Njombe-Penja (région du Littoral) : longitude 9.6426 à 9.6502, latitude 4.6213 à 4.6399.
 - **Licence** : accès libre et gratuit. Mention obligatoire sur les produits dérivés : « Contains modified Copernicus Sentinel data [année] ».
-- **Résolution** : 10 m (bleu, vert, rouge, proche infrarouge) et 20 m (red-edge, infrarouge moyen).
-- **Date d'acquisition** : *à compléter* (une date en saison sèche et une en saison des pluies par site).
-- **Composition** : *à compléter*.
-- **Découpage** : pas d'apprentissage ; les seuils des cartes de vigueur et de stress hydrique sont réglés sur un site et évalués sur l'autre.
-- **Risques de fuite** : aucun, les deux sites étant dans des pays différents.
-- **Biais et limites** : un pixel couvre 10 à 20 m, donc plusieurs bananiers à la fois : aucune lecture à l'échelle du plant. Les nuages sont fréquents en zone tropicale.
+- **Résolution** : bandes rééchantillonnées à 10 m par pixel au téléchargement (résolution native : 10 m pour B02, B03, B04, B08 ; 20 m pour B05, B8A, B11, B12). Projection UTM 17S (EPSG:32717) pour l'Équateur, UTM 32N (EPSG:32632) pour le Cameroun.
+- **Date d'acquisition** : une date par saison et par site.
+
+| Site | Saison des pluies | Saison sèche |
+| --- | --- | --- |
+| Équateur | 31/03/2026 | 22/09/2026 |
+| Cameroun | 20/04/2026 | 16/12/2025 |
+
+- **Composition** : pour chaque date, 8 bandes en réflectance (B02, B03, B04, B05, B08, B8A, B11, B12) et la carte de classification de scène (SCL), qui signale nuages et ombres (téléchargée dans sa version colorée, une couleur par classe). Équateur : 2,95 km² (211 × 138 pixels). Cameroun : 1,73 km² (84 × 205 pixels). Pour chaque site, les deux dates couvrent exactement la même grille de pixels. D'après la SCL, aucun pixel de nuage ni d'ombre dans les quatre images. Ces vérifications sont reproductibles avec `outils/verifier_sentinel2.py`.
+- **Découpage** : pas d'apprentissage ; les seuils des cartes de vigueur et de stress hydrique sont réglés sur l'Équateur et évalués sur le Cameroun.
+- **Risques de fuite** : aucun entre les sites, situés dans deux pays différents. Au sein d'un site, les deux dates sont comparées entre elles, pas utilisées l'une pour régler l'autre.
+- **Biais et limites** :
+    - un pixel couvre 10 m, donc plusieurs bananiers à la fois : aucune lecture à l'échelle du plant ;
+    - zones très nuageuses : les rectangles ont été placés sur les seuls blocs dégagés aux deux dates, ce qui limite leur taille (en particulier au Cameroun) et peut les rendre peu représentatifs de toute la plantation ;
+    - au Cameroun, 9,5 % des pixels sont classés « sol nu » en décembre contre 0,2 % en avril : ces parcelles étaient probablement en cours de replantation et ont été couvertes par la végétation entre les deux dates. Une différence d'indice sur ces parcelles reflète ce changement, pas un manque d'eau : elles seront exclues de la comparaison du stress hydrique ;
+    - les deux sites réagissent très différemment aux saisons : en Équateur, l'écart d'indice d'humidité (NDMI) médian entre les deux dates est faible (0,43 contre 0,41), probablement grâce à l'irrigation ; au Cameroun, il est plus marqué (0,34 contre 0,30). Des seuils absolus ne seraient donc pas transposables d'un site à l'autre ;
+    - les dates de saison des pluies et de saison sèche sont séparées de 4 à 6 mois : l'état de la plantation (récoltes, replantations) a pu changer entre les deux.
 
 ## Écart entre photos de feuilles et images aériennes
 
