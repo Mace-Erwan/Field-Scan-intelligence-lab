@@ -12,14 +12,24 @@ pip install -r requirements.txt
 
 ## Utilisation
 
-*En cours d'écriture.* Commande prévue :
-
 ```
 python run.py --images DOSSIER --parcelles parcelles.geojson --out resultats/
 ```
 
+- `DOSSIER` : une image GeoTIFF par bande Sentinel-2, avec le nom de la bande dans le nom du fichier (ex. `..._B04_(Raw).tiff`), comme les exports du Copernicus Browser.
+- `parcelles.geojson` : les polygones des parcelles.
+
+Sorties dans `resultats/` :
+
+- `ndvi.tif`, `ndmi.tif` : cartes de vigueur et d'humidité des feuilles, pixel par pixel ;
+- `parcelles.csv` : une ligne par parcelle (nombre de pixels, NDVI et NDMI moyens) ;
+- `parcelles.geojson` : les parcelles avec leurs valeurs.
+
+Version actuelle : vigueur et humidité seulement. Le comptage des plants, les maladies et le bulletin sont en cours.
+
 ## Contenu du dépôt
 
+- `run.py` : la chaîne d'analyse (commande ci-dessus).
 - `docs/carnet_donnees.md` : carnet de données (sources, licences, découpage, risques de fuite, biais).
 - `outils/verifier_sentinel2.py` : contrôle des images Sentinel-2 téléchargées (bandes, nuages, NDVI et NDMI médians).
 
