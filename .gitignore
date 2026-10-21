@@ -1,0 +1,21 @@
+# Données : elles restent sur mon PC, jamais sur GitHub
+data/
+*.zip
+*.tif
+*.tiff
+*.jp2
+
+# Sorties de run.py
+resultats/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Fichiers système et éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
