@@ -1,0 +1,48 @@
+# Images du jeu Bangladesh (BananaLSD, OriginalSet) écartées du test : quasi-doublons.
+# Repérées par outils/preparer_feuilles.py puis vérifiées à l'oeil le 23/10/2026.
+# Dans chaque groupe de doublons, je garde une seule image ; healthy/122.jpg et
+# pestalotiopsis/78.jpg sont la même photo avec deux étiquettes différentes : je retire les deux.
+cordana/157.jpg
+cordana/21.jpg
+cordana/76.jpg
+healthy/101.jpg
+healthy/102.jpg
+healthy/104.jpg
+healthy/105.jpg
+healthy/106.jpg
+healthy/107.jpg
+healthy/108.jpg
+healthy/109.jpg
+healthy/110.jpg
+healthy/111.jpg
+healthy/112.jpg
+healthy/122.jpg
+healthy/123.jpg
+healthy/124.jpg
+healthy/125.jpg
+healthy/126.jpg
+healthy/127.jpg
+healthy/128.jpg
+healthy/34.jpg
+healthy/36.jpg
+healthy/38.jpg
+healthy/40.jpg
+healthy/41.jpg
+healthy/42.jpg
+healthy/43.jpg
+healthy/44.jpg
+healthy/45.jpg
+healthy/47.jpg
+healthy/49.jpg
+healthy/51.jpg
+healthy/54.jpg
+healthy/55.jpg
+healthy/56.jpg
+healthy/57.jpg
+healthy/58.jpg
+healthy/59.jpg
+healthy/63.jpg
+healthy/89.jpg
+healthy/92.jpg
+pestalotiopsis/78.jpg
+sigatoka/373.jpg
