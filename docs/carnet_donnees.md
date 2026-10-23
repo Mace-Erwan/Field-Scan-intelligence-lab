@@ -1,6 +1,6 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 21/10/2026. Les mentions *à compléter* signalent ce que je n'ai pas encore vérifié.
+Mis à jour le 23/10/2026.
 
 ## 1. Feuilles de bananier — Tanzanie 2023 (Harvard Dataverse)
 
@@ -8,10 +8,15 @@ Mis à jour le 21/10/2026. Les mentions *à compléter* signalent ce que je n'ai
 - **Licence** : CC0 1.0 (domaine public).
 - **Résolution** : smartphones Samsung 13 Mpx, photos prises au sol. Les images fournies sont réduites : 1024 × 768 px pour la plupart (en paysage ou en portrait), avec une partie en 640 × 480 px dans FUSARIUM WILT_1 et en 640 × 288 px dans HEALTHY_1 (sondage de 200 images par dossier).
 - **Date d'acquisition** : février à juillet 2021.
-- **Composition** : 16 092 images après suppression des doublons : 5 628 saines, 5 767 Black Sigatoka, 4 697 Fusarium Wilt Race 1. Ce sont les chiffres de l'article, que j'ai retrouvés exactement en comptant les fichiers ; la fiche descriptive fournie avec les données (17 068 images) décrit l'état avant suppression des doublons. Les dossiers « sain » ne contiennent que des feuilles ; les dossiers malades contiennent des feuilles et des tiges. Les images sont nommées `Image_<numéro>.jpg`, sans indication de feuille ou de tige. Je ne garde que les feuilles, puisque le sujet porte sur la classification de feuilles : le tri se fera donc sur le contenu des images. Les archives contiennent aussi des fichiers système macOS (`__MACOSX`, `.DS_Store`), que j'ignore.
+- **Composition** : 16 092 images après suppression des doublons : 5 628 saines, 5 767 Black Sigatoka, 4 697 Fusarium Wilt Race 1. Ce sont les chiffres de l'article, que j'ai retrouvés exactement en comptant les fichiers ; la fiche descriptive fournie avec les données (17 068 images) décrit l'état avant suppression des doublons. Les dossiers « sain » ne contiennent que des feuilles ; d'après l'article, les dossiers malades contiennent des feuilles et des tiges. Les images sont nommées `Image_<numéro>.jpg`, sans indication de feuille ou de tige. Je ne garde que les feuilles, puisque le sujet porte sur la classification de feuilles : le tri se fera donc sur le contenu des images. Les archives contiennent aussi des fichiers système macOS (`__MACOSX`, `.DS_Store`), que j'ignore.
 - **Découpage** : entraînement du modèle maladies.
 - **Risques de fuite** : ce jeu vient de la même équipe que le jeu Tanzanie 2025, avec des régions en commun (Arusha, Mbeya). Les mêmes fermes, voire les mêmes plants, peuvent apparaître dans les deux. Je rechercherai les quasi-doublons entre les deux jeux avant l'entraînement. La fiche descriptive précise aussi que quelques doublons et des images très proches peuvent subsister à l'intérieur du jeu.
-- **Biais et limites** : les tiges n'apparaissent que dans les classes malades ; sans tri, un modèle pourrait apprendre « tige = malade ». De même, certains formats d'image n'existent que dans une classe (640 × 288 px chez les saines, 640 × 480 px chez Fusarium) : je ramènerai toutes les images à la même taille pour que le modèle ne puisse pas s'en servir. Un seul pays. Fonds, lumière et cadrage : *à compléter après observation des images*.
+- **Biais et limites** :
+    - les tiges n'apparaissent que dans les classes malades ; sans tri, un modèle pourrait apprendre « tige = malade ». J'ai regardé 40 images tirées au hasard dans chacun des 6 dossiers : je n'ai trouvé des tiges que dans Fusarium, et aucune dans les 80 images Black Sigatoka. J'ai ensuite passé en revue, sur des planches de vignettes, les 4 697 images Fusarium : 317 sont des tiges (273 dans FUSARIUM WILT_1, 44 dans FUSARIUM WILT_2), toutes des coupes du pseudo-tronc ou du bulbe, faciles à reconnaître (forme ronde ou fibres, anneaux bruns sur fond blanc). J'ai fait de même pour les 5 767 images Black Sigatoka : une seule est une tige (`BLACK SIGATOKA_2/Image_6450.jpg`). J'écarte ces 318 images de l'entraînement, ce qui laisse 4 380 images de feuilles Fusarium et 5 766 images de feuilles Black Sigatoka. Le déséquilibre « tige = Fusarium » est donc le vrai risque de ce jeu ;
+    - certains formats d'image n'existent que dans une classe (640 × 288 px chez les saines, 640 × 480 px chez Fusarium) : je ramènerai toutes les images à la même taille pour que le modèle ne puisse pas s'en servir ;
+    - cadrage : gros plans qui remplissent presque toute l'image, avec très peu de fond. Les feuilles saines montrent souvent la nervure centrale ;
+    - lumière : photos de jour. Une partie des images Black Sigatoka a une teinte violette ou bleutée, sans doute un réglage des couleurs du téléphone ;
+    - un seul pays.
 
 ## 2. Feuilles de bananier — Tanzanie 2025 (Zenodo)
 
@@ -21,8 +26,12 @@ Mis à jour le 21/10/2026. Les mentions *à compléter* signalent ce que je n'ai
 - **Date d'acquisition** : du 22/11/2022 au 13/01/2023.
 - **Composition** : le jeu complet compte 11 767 images de feuilles (3 339 saines, 3 496 Black Sigatoka, 4 932 Fusarium Wilt Race 1), réparties en 9 archives. J'en ai téléchargé une par classe (BLACK SIGATOKA-1, FUSARIUM WILT-1, HEALTHY-1), soit 3 001 images : 1 000 saines, 1 000 Black Sigatoka, 1 001 Fusarium Wilt Race 1. Ce sous-ensemble équilibré suffit pour la validation.
 - **Découpage** : validation du modèle maladies.
-- **Risques de fuite** : voir Tanzanie 2023. La séparation entre les deux jeux est temporelle (2021 contre 2022-2023), pas géographique.
-- **Biais et limites** : même pays, même équipe et même protocole que le jeu d'entraînement, donc des scores de validation probablement optimistes. C'est pour cette raison que je teste sur un autre pays.
+- **Risques de fuite** : voir Tanzanie 2023. La séparation entre les deux jeux est temporelle (2021 contre 2022-2023), pas géographique. J'ai recherché les doublons entre les deux jeux (empreinte d'image, puis comparaison des images réduites, puis vérification à l’œil des 29 paires les plus proches) : je n'en ai trouvé aucun. Cette méthode repère les copies d'une même photo ; elle ne garantit pas qu'une même feuille n'a pas été photographiée à nouveau sous un autre angle.
+- **Biais et limites** :
+    - même pays et même équipe que le jeu d'entraînement, donc des scores de validation probablement optimistes. C'est pour cette raison que je teste sur un autre pays ;
+    - cadrage différent du jeu 2023 : feuilles souvent entières, avec du fond (sol, autres plants, ciel), et non des gros plans. Le modèle sera donc validé sur des images qui ne ressemblent pas tout à fait à son entraînement ;
+    - dans un échantillon de 24 images par classe, des tuyaux d'irrigation bleus apparaissent derrière 3 feuilles saines, et jamais dans les autres classes : un modèle pourrait associer ce décor à la classe saine ;
+    - dans ce même échantillon, 2 feuilles étiquetées saines portent des taches brunes (`HEALTHY_453.jpg`, `HEALTHY_486.jpg`) : il peut y avoir des erreurs d'étiquetage.
 
 ## 3. Feuilles de bananier — Bangladesh, BananaLSD (Mendeley Data)
 
@@ -33,7 +42,7 @@ Mis à jour le 21/10/2026. Les mentions *à compléter* signalent ce que je n'ai
 - **Composition** : 937 photos originales (473 sigatoka, 173 pestalotiopsis, 162 cordana, 129 saines), étiquetées par un phytopathologiste. Vérifié après décompression. Le dépôt contient aussi 1 600 images augmentées, copies modifiées des originales : je ne les utilise pas.
 - **Découpage** : test sur un autre pays. Les classes cordana et pestalotiopsis, jamais vues à l'entraînement, servent à tester la réponse « je ne sais pas ».
 - **Risques de fuite** : aucune source commune avec les jeux tanzaniens (autre pays, autre équipe). Les images augmentées sont exclues, car elles feraient compter plusieurs fois la même photo.
-- **Biais et limites** : petit jeu (937 images), déséquilibré (473 sigatoka contre 129 saines), un seul site, un seul mois. Pas de Fusarium. Le type de Sigatoka (noire ou jaune) n'est pas précisé. Les images sont déjà en 224 px alors que les jeux tanzaniens sont en haute résolution : je ramènerai toutes les images à la même taille, pour que le modèle ne puisse pas reconnaître un jeu à sa résolution.
+- **Biais et limites** : petit jeu (937 images), déséquilibré (473 sigatoka contre 129 saines), un seul site, un seul mois. Pas de Fusarium. Le type de Sigatoka (noire ou jaune) n'est pas précisé. Cadrage proche de Tanzanie 2023 (gros plans), avec des couleurs plus ternes. Le jeu contient des doublons, que j'ai recherchés automatiquement (`outils/preparer_feuilles.py`) puis vérifiés à l'œil : 42 groupes d'images identiques ou presque. 38 concernent la classe saine, ce qui ramène les 129 photos saines à environ 90 photos distinctes. Une même photo apparaît aussi deux fois avec deux étiquettes différentes (`healthy/122.jpg` et `pestalotiopsis/78.jpg`). Je retire 44 images du test (liste dans `outils/listes/doublons_bangladesh.txt`) : une seule image est gardée par groupe, et les deux images à l'étiquette contradictoire sont écartées. Il reste 893 images de test : 90 saines, 472 sigatoka, 159 cordana, 172 pestalotiopsis. Les images sont déjà en 224 px alors que les jeux tanzaniens sont en haute résolution : je ramènerai toutes les images à la même taille, pour que le modèle ne puisse pas reconnaître un jeu à sa résolution.
 
 ## 4. Images drone — ReforesTree, Équateur (Zenodo)
 
