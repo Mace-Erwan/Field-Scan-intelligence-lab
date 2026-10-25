@@ -32,5 +32,8 @@ Version actuelle : vigueur et humidité seulement. Le comptage des plants, les m
 - `run.py` : la chaîne d'analyse (commande ci-dessus).
 - `docs/carnet_donnees.md` : carnet de données (sources, licences, découpage, risques de fuite, biais).
 - `outils/verifier_sentinel2.py` : contrôle des images Sentinel-2 téléchargées (bandes, nuages, NDVI et NDMI médians).
+- `outils/preparer_feuilles.py` : préparation des photos de feuilles (tiges écartées, images en 224 × 224 px, recherche des doublons).
+- `outils/listes/` : photos de tiges et doublons écartés, repérés à l'œil.
+- `entrainement/maladies.ipynb` : entraînement du modèle maladies sur Google Colab (GPU).
 
 Les données ne sont pas dans le dépôt : leurs sources sont décrites dans le carnet de données.
