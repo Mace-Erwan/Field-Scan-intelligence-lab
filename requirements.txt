@@ -3,3 +3,4 @@ tifffile
 rasterio
 geopandas
 Pillow
+scipy
