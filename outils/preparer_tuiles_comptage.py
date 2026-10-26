@@ -13,7 +13,7 @@ plus d'exemples) ; les autres sans chevauchement.
 
 Sorties dans <dossier>/tuiles/ :
     images/<ferme>_<ligne>_<colonne>.png
-    tuiles.csv        une ligne par tuile : image, ferme, rôle, nombre de bananiers
+    tuiles.csv        une ligne par tuile : image, ferme, rôle, nombre de bananiers, taille d'un pixel en mètres
     annotations.csv   une ligne par rectangle : image, xmin, ymin, xmax, ymax, label (banane / autre)
 
 Utilisation :
@@ -61,6 +61,8 @@ def main():
 
         # Arbres de la ferme, en pixels de l'image réduite
         arbres = verite[verite.site == site].copy()
+        # Taille d'un pixel en mètres (l'image est en degrés : 1 degré de longitude = 111 320 m x cos(latitude))
+        taille_pixel_m = abs(transform.a) * 111320 * np.cos(np.radians(arbres.lat.mean()))
         lignes, colonnes = rasterio.transform.rowcol(transform, arbres.lon, arbres.lat)
         arbres["ligne"], arbres["colonne"] = np.array(lignes), np.array(colonnes)
         arbres["demi"] = arbres.largeur_px / REDUCTION / 2
@@ -84,9 +86,10 @@ def main():
                         "xmax": min(TAILLE, round(a.colonne + a.demi - x0)), "ymax": min(TAILLE, round(a.ligne + a.demi - y0)),
                         "label": "banane" if a.est_banane else "autre",
                     })
-                tuiles.append({"image_path": nom, "site": site, "role": role, "bananes": int(dedans.est_banane.sum())})
+                tuiles.append({"image_path": nom, "site": site, "role": role, "bananes": int(dedans.est_banane.sum()),
+                               "taille_pixel_m": round(taille_pixel_m, 4)})
                 nombre += 1
-        print(f"{site:25s} {role:13s} {nombre:4d} tuiles")
+        print(f"{site:25s} {role:13s} {nombre:4d} tuiles   pixel = {taille_pixel_m * 100:.1f} cm")
 
     tuiles, annotations = pd.DataFrame(tuiles), pd.DataFrame(annotations)
     tuiles.to_csv(sortie / "tuiles.csv", index=False)
