@@ -1,13 +1,13 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 23/10/2026.
+Mis à jour le 28/10/2026.
 
 ## 1. Feuilles de bananier — Tanzanie 2023 (Harvard Dataverse)
 
 - **Provenance** : Mduma & Leo, *Dataset of banana leaves and stem images for object detection, classification and segmentation: A case of Tanzania*, Data in Brief 49 (2023) 109322, [DOI 10.1016/j.dib.2023.109322](https://doi.org/10.1016/j.dib.2023.109322). Données sur [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LQUWXW), téléchargées le 18/10/2026. Photos prises dans les régions de Kagera, Arusha, Dar es Salaam, Kilimandjaro et Mbeya.
 - **Licence** : CC0 1.0 (domaine public).
 - **Résolution** : smartphones Samsung 13 Mpx, photos prises au sol. Les images fournies sont réduites : 1024 × 768 px pour la plupart (en paysage ou en portrait), avec une partie en 640 × 480 px dans FUSARIUM WILT_1 et en 640 × 288 px dans HEALTHY_1 (sondage de 200 images par dossier).
-- **Date d'acquisition** : février à juillet 2021.
+- **Date d'acquisition** : février à juillet 2021 d'après l'article. Les métadonnées des photos (EXIF) donnent une date pour 12 456 des 16 092 images : du 18/03 au 12/04/2021. Les 6 175 photos qui ont une position GPS ont toutes été prises autour d'Arusha, et toutes par le même téléphone (Samsung SM-A015F).
 - **Composition** : 16 092 images après suppression des doublons : 5 628 saines, 5 767 Black Sigatoka, 4 697 Fusarium Wilt Race 1. Ce sont les chiffres de l'article, que j'ai retrouvés exactement en comptant les fichiers ; la fiche descriptive fournie avec les données (17 068 images) décrit l'état avant suppression des doublons. Les dossiers « sain » ne contiennent que des feuilles ; d'après l'article, les dossiers malades contiennent des feuilles et des tiges. Les images sont nommées `Image_<numéro>.jpg`, sans indication de feuille ou de tige. Je ne garde que les feuilles, puisque le sujet porte sur la classification de feuilles : le tri se fera donc sur le contenu des images. Les archives contiennent aussi des fichiers système macOS (`__MACOSX`, `.DS_Store`), que j'ignore.
 - **Découpage** : entraînement du modèle maladies.
 - **Risques de fuite** : ce jeu vient de la même équipe que le jeu Tanzanie 2025, avec des régions en commun (Arusha, Mbeya). Les mêmes fermes, voire les mêmes plants, peuvent apparaître dans les deux. J'ai recherché les doublons entre les deux jeux : je n'en ai trouvé aucun (détail en section 2). La fiche descriptive précise aussi que quelques doublons et des images très proches peuvent subsister à l'intérieur du jeu.
@@ -16,14 +16,15 @@ Mis à jour le 23/10/2026.
     - certains formats d'image n'existent que dans une classe (640 × 288 px chez les saines, 640 × 480 px chez Fusarium) : toutes les images sont ramenées à 224 × 224 px (`outils/preparer_feuilles.py`), pour que le modèle ne puisse pas s'en servir ;
     - cadrage : gros plans qui remplissent presque toute l'image, avec très peu de fond. Les feuilles saines montrent souvent la nervure centrale ;
     - lumière : photos de jour. Une partie des images Black Sigatoka a une teinte violette ou bleutée, sans doute un réglage des couleurs du téléphone ;
-    - un seul pays.
+    - chaque classe a été photographiée à des jours différents (métadonnées EXIF) : saines du 18 au 25 mars, Black Sigatoka surtout du 26 au 30 mars, Fusarium du 2 au 12 avril 2021. Un modèle pourrait apprendre la lumière ou le champ d'un jour plutôt que la maladie : c'est une raison de plus pour valider et tester sur d'autres jeux ;
+    - un seul pays, une seule région (Arusha) pour les photos géolocalisées.
 
 ## 2. Feuilles de bananier — Tanzanie 2025 (Zenodo)
 
 - **Provenance** : Mduma & Elinisa, *Banana Leaves Imagery Dataset*, Scientific Data (2025), [DOI 10.1038/s41597-025-04456-4](https://doi.org/10.1038/s41597-025-04456-4). Données sur [Zenodo](https://doi.org/10.5281/zenodo.7670326), téléchargées le 18/10/2026. Photos prises dans les districts de Rungwe, Mbeya, Arumeru et Arusha.
 - **Licence** : CC BY 4.0.
 - **Résolution** : smartphone, 4624 × 3468 px pour la grande majorité des images (sondage de 200 images par dossier), quelques images recadrées.
-- **Date d'acquisition** : du 22/11/2022 au 13/01/2023.
+- **Date d'acquisition** : novembre 2022 à janvier 2023 (article) ; les métadonnées des photos vont du 22/11/2022 au 20/01/2023. Autre téléphone que pour 2023 (Samsung SM-A715F), pas de position GPS.
 - **Composition** : le jeu complet compte 11 767 images de feuilles (3 339 saines, 3 496 Black Sigatoka, 4 932 Fusarium Wilt Race 1), réparties en 9 archives. J'en ai téléchargé une par classe (BLACK SIGATOKA-1, FUSARIUM WILT-1, HEALTHY-1), soit 3 001 images : 1 000 saines, 1 000 Black Sigatoka, 1 001 Fusarium Wilt Race 1. Ce sous-ensemble équilibré suffit pour la validation.
 - **Découpage** : validation du modèle maladies.
 - **Risques de fuite** : voir Tanzanie 2023. La séparation entre les deux jeux est temporelle (2021 contre 2022-2023), pas géographique. J'ai recherché les doublons entre les deux jeux (empreinte d'image, puis comparaison des images réduites, puis vérification à l’œil des 29 paires les plus proches) : je n'en ai trouvé aucun. Cette méthode repère les copies d'une même photo ; elle ne garantit pas qu'une même feuille n'a pas été photographiée à nouveau sous un autre angle.
@@ -46,14 +47,56 @@ Mis à jour le 23/10/2026.
 
 ## 4. Images drone — ReforesTree, Équateur (Zenodo)
 
-- **Provenance** : Reiersen et al., *ReforesTree: A Dataset for Estimating Tropical Forest Carbon Stock with Deep Learning and Aerial Imagery*, AAAI 2022, [arXiv:2201.11192](https://arxiv.org/abs/2201.11192). Données sur [Zenodo](https://zenodo.org/records/6813783), téléchargées le 18/10/2026. Vols réalisés par OpenForests (rapport *Drone Mapping of Cacao Agroforestry Parcels in Ecuador*, fourni dans le jeu). Six parcelles de cacao en agroforesterie d'environ 0,5 ha chacune : Carlos Vera Arteaga, Carlos Vera Guevara, Flora Pluas, Leonor Aspiazu, Manuel Macias, Nestor Macias. D'après leurs coordonnées, elles forment deux groupes distants d'environ 110 km : Flora Pluas et Nestor Macias au sud (près de Milagro), les quatre autres au nord (près de Mocache).
+- **Provenance** : Reiersen et al., *ReforesTree: A Dataset for Estimating Tropical Forest Carbon Stock with Deep Learning and Aerial Imagery*, AAAI 2022, [arXiv:2201.11192](https://arxiv.org/abs/2201.11192). Données sur [Zenodo](https://zenodo.org/records/6813783), téléchargées le 18/10/2026. Six fermes de cacao en agroforesterie : Carlos Vera Arteaga, Carlos Vera Guevara, Flora Pluas, Leonor Aspiazu, Manuel Macias, Nestor Macias, en deux groupes distants d'environ 110 km (Flora et Nestor au sud, près de Milagro ; les quatre autres au nord, près de Mocache).
 - **Licence** : CC BY 4.0.
-- **Résolution** : drone Mavic 2 Pro, caméra RGB, vol à 40 m avec 80 % de recouvrement. Une orthomosaïque par site (par exemple 12 425 × 12 305 px pour Carlos Vera Guevara). Les orthomosaïques sont géoréférencées en WGS 84 (latitude, longitude) par un fichier `.tfw` placé à côté de chaque image. La taille de pixel qu'il indique va de 0,97 à 1,19 cm selon le site, comme dans le rapport de vol (l'article annonce environ 2 cm). Erreur de positionnement : 0,25 à 0,69 m.
-- **Date d'acquisition** : 27 et 28 octobre, entre 9 h et 12 h. L'année n'est pas écrite dans le rapport, daté du 1.11.2020 : probablement octobre 2020.
-- **Composition** : le fichier `annotations/cleaned/clean_annotations.csv` contient 7 969 couronnes annotées par des boîtes, dont 3 436 bananiers. Par site (bananiers / total) : Carlos Vera Arteaga 358 / 1 122, Carlos Vera Guevara 226 / 1 636, Flora Pluas 1 076 / 1 655, Leonor Aspiazu 382 / 983, Manuel Macias 349 / 728, Nestor Macias 1 045 / 1 845. Le jeu contient aussi 4 663 arbres mesurés au sol, dont 1 504 bananiers (`field_data.csv`), le contour des 6 parcelles (0,40 à 0,53 ha, shapefile `Merged_final_plots`), des tuiles de 4 000 × 4 000 px qui se chevauchent de 200 px, et un modèle DeepForest entraîné par les auteurs. D'après la documentation du jeu, les boîtes ont été proposées par un détecteur, puis nettoyées à la main et étiquetées banane ou non banane : j'utilise uniquement ce fichier nettoyé comme vérité terrain. En l'examinant, j'ai constaté que ce fichier contient le même arbre plusieurs fois : les boîtes ont été détectées sur des tuiles qui se chevauchent, sans fusion des doublons, et toutes les boîtes de Carlos Vera Arteaga sont présentes en double. J'ai vérifié à l'œil plusieurs paires de boîtes qui se recouvrent : il s'agit à chaque fois du même arbre. Je fusionne donc les boîtes d'un même site qui se recouvrent à plus de 50 % (`outils/preparer_reforestree.py`). Il reste 5 328 arbres, dont 2 731 bananiers (au lieu de 7 969 boîtes et 3 436 bananiers). Par site (bananiers / arbres) : Carlos Vera Arteaga 170 / 535, Carlos Vera Guevara 202 / 771, Flora Pluas 891 / 1 362, Leonor Aspiazu 333 / 857, Manuel Macias 257 / 581, Nestor Macias 878 / 1 222.
-- **Découpage** : comptage des pieds, par site entier : 4 sites pour l'entraînement, 1 pour la validation, 1 pour le test. Répartition à fixer en tenant compte du nombre de bananiers (de 226 à 1 076 selon le site), de l'éclairage et des deux zones géographiques.
-- **Risques de fuite** : les tuiles d'un même site se chevauchent. Un découpage aléatoire des tuiles placerait les mêmes arbres en entraînement et en test ; c'est pourquoi je sépare par site. Le modèle DeepForest fourni a été entraîné par les auteurs sur ces mêmes sites : je ne l'évalue pas sur ReforesTree.
-- **Biais et limites** : parcelles de cacao où le bananier est une culture secondaire, mêlée à d'autres arbres, et non une plantation industrielle : la densité et la disposition des plants diffèrent. Les boîtes entourent des couronnes, sans distinguer pied mère et rejets. Comme elles ont été proposées par un détecteur, des couronnes qu'il a manquées peuvent être absentes des annotations. Un seul pays, une seule campagne de vol. Éclairage différent selon les sites : ciel couvert pour Flora Pluas, Nestor Macias, Manuel Macias et Leonor Aspiazu, soleil pour Carlos Vera Arteaga et Carlos Vera Guevara. L'erreur de positionnement (jusqu'à 0,69 m) est proche de la tolérance d'appariement de 1 m utilisée pour l'évaluation. Les arbres ne sont annotés de façon complète qu'à l'intérieur des parcelles : autour, beaucoup de bananiers visibles sur l'image n'ont pas de boîte (Flora Pluas, Manuel Macias). Le comptage sera donc évalué uniquement à l'intérieur des contours de parcelle, où restent 2 149 bananiers (de 61 à Carlos Vera Arteaga à 701 à Flora Pluas). Même à l'intérieur des parcelles, l'annotation n'est pas parfaite : en regardant des zooms sur les fermes d'entraînement, j'ai vu quelques petites plantes sans rectangle, quelques plantes qui ressemblent à des bananiers étiquetées « autre », et des rectangles dont la taille ne correspond pas à la couronne. Je ne corrige pas ces annotations (je n'ai pas vu le terrain, et corriger là où mon modèle se trompe gonflerait son score) ; elles limitent le score maximal atteignable. À Flora Pluas, les bananiers sont si serrés que leurs couronnes se touchent (jusqu'à 66 bananiers dans un carré de 18 m de côté).
+- **Résolution** : drone Mavic 2 Pro, caméra RGB, vol à 40 m. Une orthomosaïque par ferme, de 0,97 à 1,19 cm par pixel selon la ferme (fichiers `.tfw`), erreur de positionnement de 0,25 à 0,69 m. Je réduis les images 4 fois pour travailler plus vite : 3,9 à 4,8 cm par pixel selon la ferme.
+- **Date d'acquisition** : 27 et 28 octobre, probablement 2020 (rapport de vol daté du 1.11.2020).
+- **Composition** : chaque arbre est annoté par une boîte autour de sa couronne, étiquetée bananier ou non (`annotations/cleaned/clean_annotations.csv`, 7 969 boîtes). Les auteurs ont annoté sur des tuiles qui se chevauchent, sans fusionner les doublons : un même arbre a souvent deux boîtes, et toutes celles d'Arteaga sont en double. Je fusionne les boîtes d'une même ferme qui se recouvrent à plus de 50 % (`outils/preparer_reforestree.py`) : il reste 5 328 arbres, dont 2 731 bananiers. Chaque ferme a une **parcelle** inventoriée sur le terrain (shapefile `Merged_final_plots`) ; les annotations ne sont complètes qu'à l'intérieur. Dans les parcelles :
+
+| Ferme | Surface | Arbres | Bananiers | Part de bananiers |
+|---|---|---|---|---|
+| Flora Pluas | 0,40 ha | 1 051 | 701 | 67 % |
+| Leonor Aspiazu | 0,48 ha | 631 | 292 | 46 % |
+| Carlos Vera Guevara | 0,43 ha | 769 | 202 | 26 % |
+| Carlos Vera Arteaga | 0,53 ha | 142 | 61 | 43 % |
+| Manuel Macias | 0,41 ha | 439 | 226 | 51 % |
+| Nestor Macias | 0,45 ha | 965 | 667 | 69 % |
+
+- **Découpage** : par ferme entière. Entraînement : Flora, Leonor, Guevara, Arteaga. Validation : Manuel. Test : Nestor, que je ne regarde qu'une fois, à la fin. Pour des scores plus fiables, je fais aussi une validation croisée par ferme sur les 5 fermes hors Nestor : chaque ferme sert une fois de validation. Le comptage est noté uniquement à l'intérieur des parcelles. Pour DeepForest, les images sont découpées en tuiles de 400 × 400 pixels (environ 18 m), et tout ce qui est hors de la parcelle est peint en noir (`outils/preparer_tuiles_comptage.py`).
+- **Risques de fuite** : les tuiles d'une même ferme se chevauchent ; un découpage au hasard mettrait les mêmes arbres en entraînement et en test, d'où la séparation par ferme. Le modèle DeepForest fourni avec le jeu a été entraîné par les auteurs sur ces mêmes fermes : je ne l'utilise pas.
+- **Biais et limites** :
+    - fermes de cacao où le bananier est une culture secondaire, mêlée à d'autres arbres, et non une bananeraie ;
+    - les boîtes ne distinguent pas pied mère et rejets ;
+    - hors des parcelles, beaucoup de bananiers visibles n'ont pas de boîte. Dans les parcelles aussi, il manque des bananiers et des boîtes sont mal placées (vérification ci-dessous) ;
+    - Arteaga est très peu dense : 142 arbres dans 0,53 ha, environ 270 par hectare contre environ 2 600 à Flora. Sa parcelle (contour officiel des auteurs, vérifié) est une zone sèche avec beaucoup de petites plantes non annotées ;
+    - éclairage différent selon les fermes : ciel couvert à Flora, Nestor, Manuel et Leonor, soleil à Arteaga et Guevara ;
+    - l'erreur de positionnement (jusqu'à 0,69 m) est proche de la tolérance de 1 m utilisée pour noter.
+
+### Qualité des annotations : ce que j'ai vérifié à l'œil
+
+![Manuel : parcelle et arbres annotés](images/reforestree_manuel_annotations.jpg)
+*Manuel Macias. En jaune la parcelle inventoriée, en rouge les bananiers annotés, en bleu les autres arbres annotés (un rond = le centre d'une boîte).*
+
+Les bananiers annotés de Manuel sont regroupés dans le sud de la parcelle. Au nord, des bananiers sont visibles sur l'image sans être annotés.
+
+![Flora : carré de 20 m](images/reforestree_flora_zoom_annotations.jpg)
+*Flora Pluas, carré de 20 m au centre de la parcelle, image d'origine (environ 1 cm par pixel). Annotations après fusion des doublons : 90 bananiers (rouge) et 10 autres arbres (bleu). Le point est le centre de la boîte, c'est la position de l'arbre que j'utilise pour noter. Le carré a la largeur de la boîte d'origine (après fusion, je ne garde que le centre et la largeur, la forme est donc approchée).*
+
+Dans les zones denses, les boîtes ne suivent pas toujours les couronnes : certaines n'en couvrent qu'une partie, plusieurs boîtes se partagent parfois une même couronne, et quelques grandes couronnes n'ont aucune boîte.
+
+**Vérification sur 50 fausses alertes.** Sur Manuel, ma méthode simple fait 511 détections, dont 436 sans bananier annoté à moins de 1 m. J'en ai tiré 50 au hasard et je les ai classées à l'œil :
+
+| Ce qu'il y a sous la détection | Nombre |
+|---|---|
+| une autre plante | 22 |
+| **un bananier sans annotation** | **15** |
+| un bananier annoté, mais à plus de 1 m de la détection | 8 |
+| du sol, rien de clair | 5 |
+
+![Bananiers non annotés](images/reforestree_bananiers_non_annotes.jpg)
+*6 des 15 bananiers non annotés (Manuel). Croix jaune = détection de la méthode simple, cercle = 1 m, rond bleu = autre arbre annoté. Aucun bananier n'est annoté dans le cercle.*
+
+Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents des annotations (estimation sur 50 cas, donc imprécise). Le score mesuré sur ReforesTree sous-estime la qualité réelle d'une méthode, et un modèle entraîné sur ces annotations reçoit des exemples contradictoires : un bananier annoté, un bananier identique non annoté. Je ne corrige pas les annotations de validation et de test : la note doit rester comparable et ne pas être ajustée à ma méthode.
 
 ## 5. Images satellite — Sentinel-2 (Copernicus)
 
@@ -95,12 +138,37 @@ Mis à jour le 23/10/2026.
     - j'ai évité les routes, l'hacienda et les zones hors bananeraie. Les parcelles ne contiennent donc que l'intérieur de la plantation, sans ses bords. Malgré ces précautions, les pixels en bordure de parcelle peuvent mélanger bananiers et chemins ;
     - avec un pixel de 10 m, une parcelle de 1,4 ha ne contient qu'environ 140 pixels.
 
-## 7. Modèle pré-entraîné
+## 7. Modèles pré-entraînés
 
-- **Modèle** : MobileNetV3-Large, poids `IMAGENET1K_V2` fournis par la bibliothèque torchvision, pré-entraînés sur ImageNet-1k (1,2 million de photos, 1 000 classes d'objets).
+**MobileNetV3-Large (maladies)**
+
+- **Modèle** : poids `IMAGENET1K_V2` de torchvision, pré-entraînés sur ImageNet-1k (1,2 million de photos, 1 000 classes d'objets).
 - **Usage** : point de départ du modèle maladies. Je remplace la dernière couche (3 classes : saine, Black Sigatoka, Fusarium), puis j'entraîne tout le réseau sur Tanzanie 2023 (`entrainement/maladies.ipynb`).
 - **Pourquoi** : réseau léger, conçu pour tourner sans GPU, comme le demande le sujet ; le pré-entraînement évite d'apprendre à partir de zéro avec seulement 15 774 photos.
-- **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie ni du Bangladesh ; il n'y a donc pas de fuite vers le test.
+- **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie ni du Bangladesh.
+
+**DeepForest (comptage)**
+
+- **Modèle** : détecteur de couronnes d'arbres `weecology/deepforest-tree` (bibliothèque DeepForest 2, réseau RetinaNet), pré-entraîné par ses auteurs sur des images aériennes de forêts, à environ 10 cm par pixel.
+- **Usage** : point de départ du détecteur de bananiers. Je le réentraîne sur les bananiers de ReforesTree et de Count banana plants (`entrainement/comptage_deepforest_*.ipynb`).
+- **Limite** : mes images sont à environ 4,5 cm par pixel, deux fois plus fines que celles de son pré-entraînement : les arbres lui paraissent deux fois plus gros.
+- **Risque de fuite** : ses données de pré-entraînement ne contiennent pas les fermes ReforesTree.
+
+## 8. Images drone — Count banana plants (Roboflow Universe)
+
+- **Provenance** : projet [« Count banana plants »](https://universe.roboflow.com/count-banana-plants/count-banana-plants) publié sur Roboflow Universe par « COUNT BANANA PLANTS ». Version **v15 « DATASET FINAL SIN AUG »** (générée le 27/07/2022), téléchargée au format COCO le 28/10/2026. Je l'ai trouvé en cherchant d'autres jeux de bananiers vus par drone, parce que les annotations de ReforesTree sont incomplètes (section 4). Pays, date et auteurs réels : non indiqués.
+- **Licence** : CC BY 4.0.
+- **Choix de la version** : le projet a 10 versions des mêmes images. Toutes sauf deux contiennent des copies modifiées des images d'entraînement (retournées, pivotées, plus ou moins claires : ×2 pour la v38, ×3 pour les v25 et v32) ou des images redimensionnées en 456 × 456 (v6 à v9). Ces copies seraient des quasi-doublons et créeraient des fuites. La v15 est la seule grande version sans copie et sans redimensionnement.
+- **Résolution** : 400 images de 480 × 480 pixels, découpées dans 77 photos de drone brutes (le nom du fichier donne le dossier de l'appareil, le numéro de photo et la position du morceau, par exemple `100_0221_0204_0_2880`). Ce ne sont pas des orthomosaïques : pas de coordonnées, et la taille du pixel n'est pas donnée. Je l'estime à environ 3 cm : la boîte médiane d'un bananier fait 105 pixels, pour une couronne adulte d'environ 3 m. C'est une hypothèse, pas une mesure.
+- **Composition** : 4 672 boîtes d'une seule classe, `Banana-plant` (j'en écarte une de 1,3 pixel de large), environ 10 par image (au plus 32), aucune image vide. Par dossier : `100_0221` 217 morceaux / 15 photos / 3 083 bananiers, `100_0222` 85 / 25 / 977, `100_0223` 93 / 35 / 591, `100_0224` 5 / 2 / 21.
+
+![Count banana plants : annotations](images/count_banana_annotations.jpg)
+*12 images tirées au hasard, boîtes des auteurs en rouge.*
+
+- **Découpage** : le découpage train / valid / test fourni par Roboflow est fait au hasard, et des morceaux d'une même photo se retrouvent des deux côtés. Je ne l'utilise pas. Je sépare par dossier, que je considère comme un vol : apprentissage `100_0221` + `100_0222` (302 images), validation `100_0223` + `100_0224` (98 images).
+- **Risques de fuite** : les photos successives d'un même vol se recouvrent et montrent les mêmes plants ; c'est pourquoi un vol entier va d'un seul côté. Je ne sais pas si les dossiers correspondent à des parcelles différentes ou à la même parcelle à des dates différentes.
+- **Biais et limites** : bananeraie presque pure, plants bien séparés, très différente des fermes mélangées de ReforesTree. Sur les 12 images regardées, presque chaque bananier a sa boîte (quelques oublis au bord des images) : les annotations semblent beaucoup plus complètes que celles de ReforesTree. Photos brutes, donc vue un peu en perspective sur les bords. Taille du pixel estimée.
+- **Utilisation** : test de la méthode simple sur une zone jamais vue, et apprentissage de DeepForest (seul, puis mélangé à ReforesTree). Résultats : voir [experiences.md](experiences.md).
 
 ## Écart entre photos de feuilles et images aériennes
 
