@@ -1,16 +1,22 @@
 """
 Prépare les photos de feuilles pour le modèle maladies.
 
-Pour chaque jeu (Tanzanie 2023, Tanzanie 2025, Bangladesh), le script :
+Pour chaque jeu (Tanzanie 2023, Tanzanie 2025, Pérou, Bangladesh), le script :
   1. écarte les photos de tiges (liste dans outils/listes/tiges_tanzanie_2023.txt) ;
   2. ramène chaque image à 224 x 224 pixels (côté le plus court à 224, puis recadrage au centre) ;
-  3. repère les quasi-doublons, à l'intérieur de chaque jeu et entre les deux jeux tanzaniens,
-     en deux temps :
+  3. repère les quasi-doublons, à l'intérieur de chaque jeu et entre chaque paire de jeux
+     (dont le Bangladesh, le jeu de test),
+     en trois temps :
        - une empreinte rapide (dHash, 64 bits) donne des paires candidates ;
-       - chaque candidate est confirmée si les deux images, réduites à 32 x 32 pixels en couleur,
-         sont très corrélées (corrélation >= SEUIL_CORRELATION).
-     L'empreinte seule ne suffit pas : sur des gros plans de feuilles très uniformes, elle
-     associe des milliers d'images différentes. Les paires restantes sont à vérifier à l'œil.
+       - 1re confirmation : les deux images, réduites à 32 x 32 pixels en couleur, sont très
+         corrélées (corrélation >= SEUIL_CORRELATION) ;
+       - 2e confirmation : elles le sont encore en 112 x 112 pixels en gris
+         (corrélation >= SEUIL_CORRELATION_FINE).
+     L'empreinte et la 1re confirmation ne suffisent pas : sur des gros plans de feuilles à nervures
+     parallèles, elles associent des milliers de feuilles différentes, souvent de classes différentes.
+     En 112 x 112, les détails (nervures, taches) ne tombent au même endroit que pour deux copies de
+     la même photo, ou deux photos de la même feuille prises d'affilée. Les paires restantes sont
+     à vérifier à l'œil.
 
 Les images d'origine ne sont jamais modifiées. Si le script est interrompu, il suffit de le relancer :
 les images déjà préparées sont reprises telles quelles.
@@ -33,10 +39,13 @@ from PIL import Image, ImageOps
 
 TAILLE = 224
 SEUIL_DOUBLON = 4         # empreinte : nombre maximal de bits différents (sur 64) pour une paire candidate
-SEUIL_CORRELATION = 0.9   # confirmation : corrélation minimale entre les deux images réduites
+SEUIL_CORRELATION = 0.9   # 1re confirmation : corrélation minimale en 32 x 32 couleur
+SEUIL_CORRELATION_FINE = 0.9   # 2e confirmation : corrélation minimale en 112 x 112 gris
 
 DOSSIER_BD = ("bangladesh_bananalsd/Banana Leaf Spot Diseases (BananaLSD) Dataset for "
               "Classification of Banana Leaf Diseases Using Machine Learning/BananaLSD/OriginalSet")
+
+DOSSIER_PEROU = "perou_mendeley/Banana Leaf Image Dataset for Classification of Si"
 
 # (jeu, dossier relatif à --brut, classe)
 SOURCES = [
@@ -49,6 +58,15 @@ SOURCES = [
     ("tanzanie_2025", "tanzanie_2025_zenodo/HEALTHY-1/HEALTHY-1", "saine"),
     ("tanzanie_2025", "tanzanie_2025_zenodo/BLACK SIGATOKA-1/BLACK SIGATOKA-1", "black_sigatoka"),
     ("tanzanie_2025", "tanzanie_2025_zenodo/FUSARIUM WILT-1/FUSARIUM WILT-1", "fusarium"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/HEALTHY-2/HEALTHY-2", "saine"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/HEALTHY-3/HEALTHY-3", "saine"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/BLACK SIGATOKA-2/BLACK SIGATOKA-2", "black_sigatoka"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/BLACK SIGATOKA-3/BLACK SIGATOKA-3", "black_sigatoka"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/FUSARIUM WILT-2/FUSARIUM WILT-2", "fusarium"),
+    ("tanzanie_2025", "tanzanie_2025_zenodo/FUSARIUM WILT-3/FUSARIUM WILT-3", "fusarium"),
+    # Pérou : la Cordana n'est volontairement pas déclarée (maladie inconnue du test, jamais lue)
+    ("perou", f"{DOSSIER_PEROU}/sanas", "saine"),
+    ("perou", f"{DOSSIER_PEROU}/sigatoka", "black_sigatoka"),
     ("bangladesh", f"{DOSSIER_BD}/healthy", "saine"),
     ("bangladesh", f"{DOSSIER_BD}/sigatoka", "sigatoka"),
     ("bangladesh", f"{DOSSIER_BD}/cordana", "cordana"),
@@ -79,6 +97,13 @@ def empreinte(image):
 def vecteur(image):
     """Image réduite à 32 x 32 en couleur, centrée et normée : sert à comparer deux images."""
     v = np.asarray(image.convert("RGB").resize((32, 32), Image.BILINEAR), dtype=np.float32).ravel()
+    v -= v.mean()
+    return v / (np.linalg.norm(v) + 1e-6)
+
+
+def vecteur_fin(image):
+    """Image réduite à 112 x 112 en gris, centrée et normée : comparaison plus fine, sur les détails."""
+    v = np.asarray(image.convert("L").resize((112, 112), Image.BILINEAR), dtype=np.float32).ravel()
     v -= v.mean()
     return v / (np.linalg.norm(v) + 1e-6)
 
@@ -151,7 +176,7 @@ def main():
         w.writeheader()
         w.writerows(lignes)
 
-    # Quasi-doublons : dans chaque jeu, et entre les deux jeux tanzaniens
+    # Quasi-doublons : dans chaque jeu, et entre chaque paire de jeux
     hashes = np.stack(hashes)
     par_jeu = {}
     for i, l in enumerate(lignes):
@@ -159,26 +184,45 @@ def main():
     paires = []
     for jeu, indices in par_jeu.items():
         paires += chercher_doublons(hashes, indices, indices, meme_groupe=True)
-    paires += chercher_doublons(hashes, par_jeu["tanzanie_2023"], par_jeu["tanzanie_2025"], meme_groupe=False)
+    # Entre deux jeux différents, quels qu'ils soient : le test (Bangladesh) ne doit avoir aucune image
+    # en commun avec l'entraînement ou la validation
+    jeux = list(par_jeu)
+    for k, jeu_a in enumerate(jeux):
+        for jeu_b in jeux[k + 1:]:
+            paires += chercher_doublons(hashes, par_jeu[jeu_a], par_jeu[jeu_b], meme_groupe=False)
 
     print(f"Paires candidates (empreinte, au plus {SEUIL_DOUBLON} bits différents sur 64) : {len(paires)}")
-    confirmees = []
+    fins = {}   # vecteurs fins calculés seulement pour les images qui en ont besoin
+
+    def fin(i):
+        if i not in fins:
+            fins[i] = vecteur_fin(Image.open(args.out / lignes[i]["image"]))
+        return fins[i]
+
+    confirmees, premiere = [], 0
     for i, j, d in paires:
         correlation = float(vecteurs[i] @ vecteurs[j])
-        if correlation >= SEUIL_CORRELATION:
-            confirmees.append((i, j, d, correlation))
-    confirmees.sort(key=lambda p: -p[3])
+        if correlation < SEUIL_CORRELATION:
+            continue
+        premiere += 1
+        correlation_fine = float(fin(i) @ fin(j))
+        if correlation_fine >= SEUIL_CORRELATION_FINE:
+            confirmees.append((i, j, d, correlation, correlation_fine))
+    confirmees.sort(key=lambda p: -p[4])
+    print(f"Après la 1re confirmation (32 x 32, corrélation >= {SEUIL_CORRELATION}) : {premiere}")
 
     with open(args.out / "doublons.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["image_1", "classe_1", "image_2", "classe_2", "bits_differents", "correlation"])
-        for i, j, d, c in confirmees:
+        w.writerow(["image_1", "classe_1", "image_2", "classe_2", "bits_differents", "correlation",
+                    "correlation_fine"])
+        for i, j, d, c, cf in confirmees:
             w.writerow([lignes[i]["image"], lignes[i]["classe"], lignes[j]["image"], lignes[j]["classe"],
-                        d, round(c, 3)])
+                        d, round(c, 3), round(cf, 3)])
 
-    print(f"Paires confirmées (corrélation >= {SEUIL_CORRELATION}) : {len(confirmees)}")
+    print(f"Paires confirmées (2e confirmation, 112 x 112, corrélation >= {SEUIL_CORRELATION_FINE}) : "
+          f"{len(confirmees)}")
     compte = {}
-    for i, j, _, _ in confirmees:
+    for i, j, *_ in confirmees:
         cle = f"{lignes[i]['jeu']} / {lignes[j]['jeu']}"
         compte[cle] = compte.get(cle, 0) + 1
     for cle, n in sorted(compte.items()):

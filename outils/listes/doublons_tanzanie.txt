@@ -1,0 +1,8 @@
+# Copies exactes repérées dans les jeux tanzaniens (outils/preparer_feuilles.py, puis vérification à l'œil le 29/10/2026).
+# Règle : est un doublon une image identique à une autre, mêmes détails aux mêmes endroits.
+# Les rafales (même feuille, cadrage légèrement différent) sont gardées : elles restent dans le même jeu, donc sans fuite.
+# Pour chaque paire, la 1re image est gardée, la 2de (ci-dessous) est écartée. Format : dossier d'origine/fichier.
+HEALTHY-2/HEALTHY_1926.jpg
+FUSARIUM WILT_1/Image_2582.jpg
+FUSARIUM WILT_1/Image_3039.jpg
+HEALTHY_1/Image_1094.jpg
