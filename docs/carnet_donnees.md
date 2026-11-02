@@ -1,6 +1,17 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 01/11/2026.
+Mis à jour le 02/11/2026.
+
+## Vue d'ensemble des photos de feuilles
+
+| Rôle | Jeu | Photos utilisées |
+|---|---|---|
+| Entraînement | Tanzanie 2023 (section 1) + Pérou (section 9) | 15 691 + 1 268 |
+| Validation | Tanzanie 2025 (section 2) | 11 766 |
+| Test | Bangladesh (section 3) | 893 |
+
+![Exemples de feuilles par jeu](images/feuilles_par_jeu.jpg)
+*Photos tirées au hasard dans chaque jeu, après préparation. Les cadrages et les couleurs changent d'un jeu à l'autre : gros plans en 2023, feuilles plus entières avec du fond en 2025, couleurs plus ternes au Bangladesh.*
 
 ## 1. Feuilles de bananier — Tanzanie 2023 (Harvard Dataverse)
 
@@ -19,6 +30,9 @@ Mis à jour le 01/11/2026.
     - chaque classe a été photographiée à des jours différents (métadonnées EXIF) : saines du 18 au 25 mars, Black Sigatoka surtout du 26 au 30 mars, Fusarium du 2 au 12 avril 2021. Un modèle pourrait apprendre la lumière ou le champ d'un jour plutôt que la maladie : c'est une raison de plus pour valider et tester sur d'autres jeux ;
     - un seul pays, une seule région (Arusha) pour les photos géolocalisées.
 
+![Tiges écartées](images/tiges_ecartees.jpg)
+*8 des 398 photos de tiges écartées : coupes de pseudo-tronc ou de bulbe, rangées avec les feuilles dans les dossiers Fusarium.*
+
 ## 2. Feuilles de bananier — Tanzanie 2025 (Zenodo)
 
 - **Provenance** : Mduma & Elinisa, *Banana Leaves Imagery Dataset*, Scientific Data (2025), [DOI 10.1038/s41597-025-04456-4](https://doi.org/10.1038/s41597-025-04456-4). Données sur [Zenodo](https://doi.org/10.5281/zenodo.7670326), téléchargées le 18/10/2026. Photos prises dans les districts de Rungwe, Mbeya, Arumeru et Arusha.
@@ -34,6 +48,9 @@ Mis à jour le 01/11/2026.
     - comme en 2023, chaque classe a surtout été photographiée à des jours différents (métadonnées EXIF, toutes les photos sont datées) : saines les 22 et 23/11/2022 (2 224 photos) puis du 16 au 18/01/2023 (1 115), Fusarium du 6 au 22/12/2022 (4 344) puis du 18 au 20/01/2023 (588), Black Sigatoka les 12 et 13/01/2023 (3 422) puis les 18 et 20/01 (74). Seul le 18/01/2023 réunit les trois classes. Le biais « classe = jour » existe donc aussi dans la validation ;
     - dans un échantillon de 24 images par classe, des tuyaux d'irrigation bleus apparaissent derrière 3 feuilles saines, et jamais dans les autres classes : un modèle pourrait associer ce décor à la classe saine ;
     - dans ce même échantillon, 2 feuilles étiquetées saines portent des taches brunes (`HEALTHY_453.jpg`, `HEALTHY_486.jpg`) : il peut y avoir des erreurs d'étiquetage.
+
+![Exemples de doublons](images/doublons_exemples.jpg)
+*À gauche, une copie exacte trouvée dans Tanzanie 2023 : une des deux images est écartée. À droite, une rafale (même feuille, cadrage à peine différent) : les deux restent, puisqu'elles sont dans le même jeu.*
 
 ## 3. Feuilles de bananier — Bangladesh, BananaLSD (Mendeley Data)
 
@@ -144,7 +161,7 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 **MobileNetV3-Large (maladies)**
 
 - **Modèle** : poids `IMAGENET1K_V2` de torchvision, pré-entraînés sur ImageNet-1k (1,2 million de photos, 1 000 classes d'objets).
-- **Usage** : point de départ du modèle maladies. Je remplace la dernière couche (3 classes : saine, Black Sigatoka, Fusarium), puis j'entraîne tout le réseau sur Tanzanie 2023 et le Pérou (`entrainement/maladies_v2_kaggle.ipynb`).
+- **Usage** : modèle maladies v1, puis comparaison pour la v2. Je remplace la dernière couche (3 classes : saine, Black Sigatoka, Fusarium), puis j'entraîne tout le réseau sur Tanzanie 2023 et le Pérou (`entrainement/maladies_v2_kaggle.ipynb`).
 - **Pourquoi** : réseau léger, conçu pour tourner sans GPU, comme le demande le sujet ; le pré-entraînement évite d'apprendre à partir de zéro avec seulement 16 959 photos.
 - **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie, du Pérou ni du Bangladesh.
 
@@ -153,10 +170,11 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 - **Modèle** : poids `IMAGENET1K_V1` de torchvision, pré-entraînés sur ImageNet-1k.
 - **Usage** : comparé à MobileNetV3 pour le modèle maladies, avec les mêmes réglages (résultats dans [experiences.md](experiences.md)). Sert aussi, sans réentraînement, à classer les photos selon leur ressemblance à des tiges (`outils/reperer_tiges.py`).
 
-**EfficientNet-B2 et ConvNeXt-Tiny (maladies, comparaison)**
+**EfficientNet-B2 et ConvNeXt-Tiny (maladies)**
 
 - **Modèles** : poids `IMAGENET1K_V1` de torchvision, pré-entraînés sur ImageNet-1k. EfficientNet-B2 : 7,7 millions de paramètres ; ConvNeXt-Tiny : 28 millions.
-- **Usage** : comparés à MobileNetV3 et EfficientNet-B0, avec la même recette et des photos en 224 × 224 px pour tous. Les deux restent utilisables sans GPU.
+- **Usage** : comparés à MobileNetV3 et EfficientNet-B0, avec la même recette et des photos en 224 × 224 px pour tous. **ConvNeXt-Tiny est le réseau retenu** pour le modèle maladies (moyenne de 3 modèles). Les deux restent utilisables sans GPU.
+- **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie, du Pérou ni du Bangladesh.
 
 **DeepForest (comptage)**
 
@@ -197,6 +215,17 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 - **Provenance** : Hailu (Addis Ababa Science and Technology University), *Banana Leaf Disease Images*, Mendeley Data, version 1, [DOI 10.17632/rjykr62kdh.1](https://doi.org/10.17632/rjykr62kdh.1). Photos prises chez quatre agriculteurs d'Arba Minch Zuria et de Mierab Abaya. Licence CC BY 4.0.
 - **Composition** : 155 saines, 320 Sigatoka, 814 Xanthomonas (dossier `resized`).
 - **Pourquoi je l'écarte** : en regardant les planches de vignettes, beaucoup de photos ne sont pas nettes. Je ne l'utilise ni pour l'entraînement, ni pour la validation, ni pour le test.
+
+## 11. Images drone — Plants-bana (Roboflow Universe), pour le comptage
+
+- **Provenance** : projet [« Plants-bana »](https://universe.roboflow.com/work-sd4ee/plants-bana) publié sur Roboflow Universe par « Work » (juillet 2024), sans description. Je l'ai trouvé en cherchant d'autres images drone de bananiers mêlés à d'autres arbres, plus proches de ReforesTree que Count banana plants. Pays, date de vol, appareil et auteurs réels : non indiqués. Les noms de fichiers (`CACAU_1_…`, `CACAU_2_…`) sont en portugais : c'est peut-être le Brésil, mais ce n'est qu'une supposition.
+- **Licence** : CC BY 4.0.
+- **Version récupérée** : la version 3 publiée contient 7 706 images, parce que chaque image d'entraînement y est copiée 3 fois avec des modifications (miroirs, rotations, zoom, luminosité, bruit), et toutes sont réduites en 640 × 640 px. Ces copies seraient des quasi-doublons. J'ai donc copié le projet dans mon espace Roboflow (02/11/2026) et créé une version sans modification ni réduction : les **2 840 images d'origine**.
+- **Composition** : 2 classes, **Banana** et **Cacao**, annotées par des contours de couronne (polygones). Les images sont des morceaux de 2 grandes images de drone (`CACAU_1` et `CACAU_2`) : d'après les coordonnées dans les noms de fichiers, des carrés de 1 280 px pris tous les 1 024 px, donc qui se chevauchent. Nombre de bananiers et taille du pixel : à vérifier après décompression.
+- **Découpage prévu** : par grande image (`CACAU_1` d'un côté, `CACAU_2` de l'autre), jamais au hasard, à cause du chevauchement des morceaux. Le découpage fourni par Roboflow est fait au hasard : je ne l'utiliserai pas.
+- **Risques de fuite** : morceaux voisins qui se recouvrent ; copies modifiées de la version publiée (évitées en reprenant les images d'origine).
+- **Biais et limites** : 2 parcelles seulement ; taille du pixel inconnue, à estimer avec la taille des couronnes comme pour Count banana plants. Sur les aperçus, presque chaque couronne a son contour : les annotations semblent plus complètes que celles de ReforesTree.
+- **Utilisation** : pas encore utilisé. Prévu pour reprendre le comptage, après le modèle maladies.
 
 ## Écart entre photos de feuilles et images aériennes
 
