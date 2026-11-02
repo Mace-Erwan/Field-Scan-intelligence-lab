@@ -53,55 +53,90 @@ Apprentissage sur Tanzanie 2023, validation sur Tanzanie 2025 (3 001 images), te
 
 ### v2 (`entrainement/maladies_v2_kaggle.ipynb`)
 
-Données nettoyées à nouveau (voir le carnet) : apprentissage sur Tanzanie 2023 + Pérou (16 959 images), validation sur toute la Tanzanie 2025 (11 766), test sur le Bangladesh (893). Tous les réglages sont choisis sur la validation.
+Données nettoyées à nouveau (voir le carnet) : apprentissage sur Tanzanie 2023 + Pérou (16 959 images), validation sur toute la Tanzanie 2025 (11 766), test sur le Bangladesh (893). Tous les choix sont faits sur la validation, avec des règles fixées avant chaque essai ; le Bangladesh n'a servi à aucun choix.
 
-**Ce qui change par rapport à la v1 :**
-- le Pérou rejoint l'apprentissage : un 2e pays, sans le biais « une classe = un jour de prise de vue » ;
-- augmentations plus fortes : cadrage, rotation, couleurs, flou, et une zone masquée au hasard, pour que le modèle ne se fie pas à un seul détail ;
-- **décision en deux étapes** :
-    1. *malade ou saine ?* La feuille est malade si P(Black Sigatoka) + P(Fusarium) dépasse un seuil d'alerte. Une feuille malade ratée est l'erreur la plus grave : je choisis le seuil qui rend le plus petit possible *2 × malades ratées + fausses alertes*. Une malade ratée compte donc comme deux fausses alertes ;
-    2. *quelle maladie ?* La maladie n'est nommée que si le modèle est assez sûr entre les deux. Le seuil est choisi pour que le nom donné soit juste 95 % du temps. Sinon, la réponse est « malade, non identifiée » : l'alerte est donnée, sans nom faux ;
-- « je ne sais pas » quand la confiance du modèle est trop basse (seuil qui garde 95 % des photos de validation) ;
-- chaque photo est regardée sous 4 vues (la photo, ses deux miroirs, sa rotation) et le modèle fait la moyenne de ses réponses.
+**Modèle final retenu :** ConvNeXt-Tiny pré-entraîné sur ImageNet, Pérou tiré 3 fois plus souvent, recompression JPEG et lissage des étiquettes, **moyenne de 3 modèles** entraînés avec des graines différentes, 4 vues.
 
-**Choix testés sur la validation :**
+#### Comment le modèle apprend
+
+Pendant l'entraînement, chaque photo est modifiée au hasard à chaque passage : cadrage et zoom, miroirs, rotation (jusqu'à 30°), couleurs et lumière, flou, une zone masquée, et une recompression JPEG plus ou moins forte (pour imiter d'autres téléphones). Le modèle ne voit jamais deux fois exactement la même image, et ne peut pas se fier à un seul détail.
+
+![Modifications aléatoires pendant l'entraînement](images/maladies_augmentations.jpg)
+*Une photo d'entraînement et 9 versions tirées au hasard. Les coins noirs viennent de la rotation, le rectangle gris est la zone masquée.*
+
+Autres réglages : 6 époques, modèle de la dernière époque gardé ; lissage des étiquettes 0,1 (la bonne réponse vaut 0,9 au lieu de 1, pour que le modèle soit moins sûr de lui à tort). Chacun des 3 modèles part des mêmes poids ImageNet ; seule la graine du hasard change (départ de la dernière couche, ordre des photos, modifications tirées). Leurs probabilités sont moyennées.
+
+#### Comment le modèle décide
+
+Chaque photo est regardée sous 4 vues ; les probabilités des 3 modèles et des 4 vues sont moyennées.
+
+![Les 4 vues](images/maladies_quatre_vues.jpg)
+
+La décision se fait ensuite en deux étapes :
+
+1. **malade ou saine ?** La feuille est malade si P(Black Sigatoka) + P(Fusarium) dépasse le seuil d'alerte. Une feuille malade ratée est l'erreur la plus grave : le seuil est celui qui rend le plus petit possible *2 × malades ratées + fausses alertes* (une malade ratée compte comme deux fausses alertes) ;
+2. **quelle maladie ?** La maladie n'est nommée que si le modèle est assez sûr entre les deux (seuil choisi pour que le nom soit juste 95 % du temps). Sinon : « malade, non identifiée ».
+
+Si la confiance du modèle est trop basse (seuil qui garde 95 % des photos de validation), la réponse est « je ne sais pas ».
+
+| | Modèle sûr de lui | Modèle hésitant |
+|---|---|---|
+| Malade (étape 1), maladie claire | Black Sigatoka ou Fusarium | je ne sais pas |
+| Malade, hésite entre les deux maladies | malade, non identifiée | je ne sais pas |
+| Saine (étape 1) | saine | je ne sais pas |
+
+#### Choix testés sur la validation
 
 | Question | Résultat | Choix |
 |---|---|---|
 | Comment choisir le seuil d'alerte ? | 0,5 fixe : 167 malades ratées et 105 fausses alertes, contre 96 et 189 au seuil de coût minimal (0,30, même entraînement). F2 : choisit 0,05, le plus bas testé (427 fausses alertes), car avec 2,5 fois plus de malades que de saines elle réagit à peine aux fausses alertes | coût (malade ratée = 2 fausses alertes) |
-| Quelle époque garder ? | garder l'époque au coût le plus bas a donné une fois l'époque 1 : un modèle qui repère bien les malades mais ne nomme que 49 % des Fusarium (35 % en « malade, non identifiée »). Le coût saute aussi beaucoup d'une époque à l'autre (par exemple 408, 817, 583) | la dernière époque, pour tous les essais |
-| 1 vue ou 4 vues ? | 4 vues ont fait mieux dans tous les essais (par exemple coût 392 avec 1 vue, 337 avec 4 vues pour EfficientNet-B2) | 4 vues |
-| Comment repérer une maladie inconnue ? | voir « Inconnues simulées » ci-dessous | confiance |
-| Quel réseau, et quel poids pour le Pérou ? | voir le tableau des essais ci-dessous | en cours |
+| Quelle époque garder ? | garder l'époque au coût le plus bas a donné une fois l'époque 1 : un modèle qui repère bien les malades mais ne nomme que 49 % des Fusarium. Le coût saute aussi beaucoup d'une époque à l'autre | la dernière époque |
+| 1 vue ou 4 vues ? | 4 vues ont fait mieux dans tous les essais (par exemple coût 392 contre 337 pour EfficientNet-B2) | 4 vues |
+| Comment repérer une maladie inconnue ? | voir « Inconnues simulées » | confiance |
+| Quel réseau ? | ConvNeXt-Tiny gagne sur tous les critères, avec ou sans le Pérou | ConvNeXt-Tiny |
+| Le Pérou aide-t-il ? | le coût baisse avec le Pérou pour les 4 réseaux | Pérou, poids 3 |
+| Recompression JPEG et lissage ? | coût égal (213 et 213) ; à coût égal, je garde celui qui rate le moins de malades (36 contre 48) | oui |
+| Un modèle ou la moyenne de 3 ? | coût 191 pour le 1er modèle seul, 167 pour la moyenne des 3 | moyenne de 3 |
 
-**Essais comparés** (6 époques, modèle de la dernière époque, mêmes réglages ; « Pérou 3 » : chaque photo du Pérou est tirée 3 fois plus souvent, soit 20 % de chaque tour, « Pérou 0 » : sans le Pérou). Les deux dernières colonnes reprennent les archives `HEALTHY-1`, `BLACK SIGATOKA-1` et `FUSARIUM WILT-1` de la validation (1 000, 1 000 et 1 001 photos), avec la règle simple « malade si P(malade) ≥ 0,5 », sans « je ne sais pas ».
+#### Tous les essais
 
-| Réseau | Pérou | Coût | Malades dites saines (sur 8 428) | dont Fusarium (sur 4 932) | Fausses alertes (saines) | Nom juste | Archives -1 bien classées : saine / Sigatoka / Fusarium | Fusarium dites saines (archives -1) |
+6 époques, modèle de la dernière époque, mêmes réglages sauf ce qui est indiqué. « Pérou 3 » : chaque photo du Pérou est tirée 3 fois plus souvent (20 % de chaque tour) ; « Pérou 0 » : sans le Pérou. Les deux dernières colonnes reprennent les archives `HEALTHY-1`, `BLACK SIGATOKA-1` et `FUSARIUM WILT-1` de la validation (1 000, 1 000 et 1 001 photos), avec la règle simple « malade si P(malade) ≥ 0,5 », sans « je ne sais pas ».
+
+| Réseau (taille) | Réglage | Coût | Malades dites saines (sur 8 428) | dont Fusarium (sur 4 932) | Fausses alertes (saines) | Nom juste | Archives -1 bien classées : saine / Sigatoka / Fusarium | Fusarium dites saines (archives -1) |
 |---|---|---|---|---|---|---|---|---|
-| MobileNetV3 | 3 | 427 | 88 | 81 | 4,4 % | 93,5 % | 987 / 967 / 875 | 39 |
-| MobileNetV3 | 1 | 564 | 131 | 114 | 6,1 % | 92,8 % | 969 / 951 / 865 | 49 |
-| MobileNetV3 | 0 | 642 | 132 | 91 | 7,1 % | 92,2 % | 948 / 927 / 912 | 29 |
-| EfficientNet-B0 | 0 | 419 | 78 | 56 | 4,2 % | 93,5 % | 964 / 964 / 912 | 11 |
-| EfficientNet-B0 | 3 | 367 | 108 | 82 | 2,7 % | 94,1 % | 987 / 985 / 870 | 36 |
-| **EfficientNet-B2** | **3** | **337** | **77** | **43** | **1,9 %** | **94,4 %** | 987 / 981 / 888 | 13 |
+| MobileNetV3 (4,2 M) | Pérou 3 | 427 | 88 | 81 | 4,4 % | 93,5 % | 987 / 967 / 875 | 39 |
+| MobileNetV3 | Pérou 1 | 564 | 131 | 114 | 6,1 % | 92,8 % | 969 / 951 / 865 | 49 |
+| MobileNetV3 | Pérou 0 | 642 | 132 | 91 | 7,1 % | 92,2 % | 948 / 927 / 912 | 29 |
+| EfficientNet-B0 (4,0 M) | Pérou 0 | 419 | 78 | 56 | 4,2 % | 93,5 % | 964 / 964 / 912 | 11 |
+| EfficientNet-B0 | Pérou 3 | 367 | 108 | 82 | 2,7 % | 94,1 % | 987 / 985 / 870 | 36 |
+| EfficientNet-B2 (7,7 M) | Pérou 0 | 493 | 70 | 43 | 6,6 % | 92,4 % | 952 / 932 / 949 | 6 |
+| EfficientNet-B2 | Pérou 3 | 337 | 77 | 43 | 1,9 % | 94,4 % | 987 / 981 / 888 | 13 |
+| ConvNeXt-Tiny (27,8 M) | Pérou 0 | 242 | 23 | 21 | 2,8 % | 95,0 % | 941 / 970 / 938 | 6 |
+| ConvNeXt-Tiny | Pérou 3 | 213 | 48 | 40 | 1,0 % | 96,0 % | 992 / 983 / 911 | 9 |
+| ConvNeXt-Tiny | Pérou 3, JPEG, lissage | 213 | 36 | 29 | 1,5 % | 95,5 % | 963 / 977 / 913 | 4 |
+| **ConvNeXt-Tiny** | **Pérou 3, JPEG, lissage, moyenne de 3** | **167** | **30** | **26** | 1,8 % | **96,5 %** | **993 / 981 / 922** | 10 |
 
-- **Le réseau** : les EfficientNet font mieux que MobileNetV3, et B2 est le meilleur sur presque tous les critères à la fois. Restent à essayer : B2 sans le Pérou, et ConvNeXt-Tiny ;
-- **le Pérou** : avec MobileNetV3, plus il y a de Pérou, meilleur est le résultat sur tous les critères (coût 642, puis 564, puis 427). Avec EfficientNet-B0, c'est un échange : moins de fausses alertes avec le Pérou, mais plus de Fusarium ratées. Le Pérou n'a pas de Fusarium, ce qui peut rendre le modèle plus sûr de lui sur les feuilles saines ;
-- chaque réglage n'a été entraîné qu'une fois. Pour des réglages identiques, le coût a varié de 324 à 427 d'un entraînement à l'autre : je ne tire de conclusion que des écarts nets ou réguliers.
+- **Le réseau** : ConvNeXt-Tiny fait nettement mieux que les autres (coût 213 contre 337 pour B2, avec ou sans le Pérou). Il est 6 à 7 fois plus gros que B0, mais reste utilisable sans GPU ;
+- **le Pérou** : avec MobileNetV3, plus il y a de Pérou, meilleur est le résultat sur tous les critères (642, 564, 427). Avec les autres réseaux, il réduit surtout les fausses alertes, parfois au prix d'un peu plus de Fusarium ratées (le Pérou n'a pas de Fusarium). Le coût baisse avec le Pérou pour les 4 réseaux ;
+- **la moyenne de 3 modèles** baisse le coût de 191 à 167 : les erreurs dues au hasard d'un entraînement se compensent ;
+- **le hasard d'un entraînement** : deux entraînements identiques de MobileNetV3 ont donné 427 et 419 ; les 3 ConvNeXt de la moyenne, seuls et sur une vue, 225, 243 et 201. Je ne tire donc de conclusion que des écarts nets ou réguliers.
 
-**Détail du meilleur essai à ce jour** (EfficientNet-B2, Pérou 3 ; seuil d'alerte 0,40, seuil pour nommer la maladie 0,69) :
+**Détail du modèle final sur la validation** (seuil d'alerte 0,25, seuil pour nommer la maladie 0,50, seuil de confiance 0,640) :
 
 | Classe réelle | Saine | Black Sigatoka | Fusarium | Malade, non identifiée | Je ne sais pas |
 |---|---|---|---|---|---|
-| Saine (3 338) | **3 154 (94 %)** | 2 | 63 | 0 | 119 |
-| Black Sigatoka (3 496) | 34 | **3 209 (92 %)** | 63 | 29 | 161 |
-| Fusarium (4 932) | 43 | 315 | **4 196 (85 %)** | 69 | 309 |
+| Saine (3 338) | **3 231 (96,8 %)** | 10 | 51 | 0 | 46 |
+| Black Sigatoka (3 496) | 4 | **3 267 (93,5 %)** | 41 | 0 | 184 |
+| Fusarium (4 932) | 26 | 174 | **4 373 (88,7 %)** | 0 | 359 |
 
-- 77 feuilles malades sur 8 428 (0,9 %) sont dites saines ; toutes les autres reçoivent une alerte ou un « je ne sais pas » ;
-- 1,9 % des feuilles saines reçoivent une fausse alerte ;
-- le Fusarium reste le plus difficile : 6 % sont prises pour de la Black Sigatoka.
+- 30 feuilles malades sur 8 428 (0,4 %) sont dites saines ; toutes les autres reçoivent une alerte ou un « je ne sais pas » ;
+- 1,8 % des feuilles saines reçoivent une fausse alerte ;
+- quand la maladie est nommée, elle est juste 96,5 % du temps ;
+- le Fusarium reste le plus difficile : 3,5 % sont prises pour de la Black Sigatoka.
 
-**Inconnues simulées.** Pour choisir comment repérer une maladie jamais vue sans toucher au Bangladesh, j'entraîne un modèle sans l'une des deux maladies, puis je la lui montre. Chaque méthode est réglée pour garder 95 % des photos connues de la validation.
+#### Inconnues simulées
+
+Pour choisir comment repérer une maladie jamais vue sans toucher au Bangladesh, j'entraîne un modèle sans l'une des deux maladies, puis je la lui montre. Chaque méthode est réglée pour garder 95 % des photos connues de la validation.
 
 | Maladie retirée | Rejetée par la confiance | Rejetée par la distance aux photos d'apprentissage | Les deux |
 |---|---|---|---|
@@ -110,7 +145,9 @@ Données nettoyées à nouveau (voir le carnet) : apprentissage sur Tanzanie 202
 
 La distance (Mahalanobis, sur le résumé de 1 280 nombres que le réseau calcule pour chaque photo) fait moins bien que le hasard pour séparer connu et inconnu (AUROC 0,40 et 0,43, 0,5 = hasard). Mon explication probable : elle repère surtout que les photos de 2025 diffèrent de celles de 2023, pas qu'une maladie est nouvelle. Je garde donc la confiance seule (simulation faite avec MobileNetV3). Une maladie à taches comme la Sigatoka est très difficile à reconnaître comme inconnue (8 %) : la Cordana et la Pestalotiopsis du Bangladesh étant aussi des maladies à taches, je m'attends à peu de « je ne sais pas » sur elles au test. Ce qui comptera surtout, c'est qu'elles ne soient pas dites saines.
 
-**Cartes d'attention.** Pour vérifier où le modèle regarde, j'utilise Grad-CAM : en rouge, les zones qui ont le plus pesé dans sa réponse (modèle MobileNetV3 du 01/11).
+#### Cartes d'attention
+
+Pour vérifier où le modèle regarde, j'utilise Grad-CAM : en rouge, les zones qui ont le plus pesé dans sa réponse (modèle MobileNetV3 du 01/11 ; à remplacer par les cartes du modèle final).
 
 ![Cartes d'attention du modèle maladies v2](images/maladies_cartes_attention.jpg)
 *Photos de validation tirées au hasard : 4 saines, 4 Black Sigatoka, 4 Fusarium, et 4 Fusarium prises pour de la Black Sigatoka.*
@@ -121,7 +158,9 @@ La distance (Mahalanobis, sur le résumé de 1 280 nombres que le réseau calcul
 - saines : sur 2 photos sur 4, le rouge est en bas de la nervure centrale. C'est peut-être un raccourci (« nervure visible = saine »), à surveiller : 4 photos ne suffisent pas pour conclure ;
 - aucun raccourci de décor visible (fond, mains, tuyaux).
 
-**Test Bangladesh** : pas encore lancé. Il sera fait une seule fois, avec le modèle final.
+#### Test Bangladesh
+
+En cours : lancé une seule fois avec le modèle final, après tous les réglages.
 
 ## 3. Vigueur et stress hydrique (Sentinel-2, `run.py`)
 
