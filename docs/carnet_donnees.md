@@ -1,6 +1,6 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 28/10/2026.
+Mis à jour le 01/11/2026.
 
 ## 1. Feuilles de bananier — Tanzanie 2023 (Harvard Dataverse)
 
@@ -10,9 +10,9 @@ Mis à jour le 28/10/2026.
 - **Date d'acquisition** : février à juillet 2021 d'après l'article. Les métadonnées des photos (EXIF) donnent une date pour 12 456 des 16 092 images : du 18/03 au 12/04/2021. Les 6 175 photos qui ont une position GPS ont toutes été prises autour d'Arusha, et toutes par le même téléphone (Samsung SM-A015F).
 - **Composition** : 16 092 images après suppression des doublons : 5 628 saines, 5 767 Black Sigatoka, 4 697 Fusarium Wilt Race 1. Ce sont les chiffres de l'article, que j'ai retrouvés exactement en comptant les fichiers ; la fiche descriptive fournie avec les données (17 068 images) décrit l'état avant suppression des doublons. Les dossiers « sain » ne contiennent que des feuilles ; d'après l'article, les dossiers malades contiennent des feuilles et des tiges. Les images sont nommées `Image_<numéro>.jpg`, sans indication de feuille ou de tige. Je ne garde que les feuilles, puisque le sujet porte sur la classification de feuilles : le tri se fera donc sur le contenu des images. Les archives contiennent aussi des fichiers système macOS (`__MACOSX`, `.DS_Store`), que j'ignore.
 - **Découpage** : entraînement du modèle maladies.
-- **Risques de fuite** : ce jeu vient de la même équipe que le jeu Tanzanie 2025, avec des régions en commun (Arusha, Mbeya). Les mêmes fermes, voire les mêmes plants, peuvent apparaître dans les deux. J'ai recherché les doublons entre les deux jeux : je n'en ai trouvé aucun (détail en section 2). La fiche descriptive précise aussi que quelques doublons et des images très proches peuvent subsister à l'intérieur du jeu.
+- **Risques de fuite** : ce jeu vient de la même équipe que le jeu Tanzanie 2025, avec des régions en commun (Arusha, Mbeya). Les mêmes fermes, voire les mêmes plants, peuvent apparaître dans les deux. J'ai recherché les doublons entre les deux jeux : je n'en ai trouvé aucun (détail en section 2). La fiche descriptive précise aussi que quelques doublons et des images très proches peuvent subsister à l'intérieur du jeu. Ma recherche de doublons (méthode en section 2) en trouve 31 paires : surtout des rafales (même feuille, cadrage à peine différent), que je garde puisqu'elles restent dans le même jeu, et 3 copies exactes, que j'écarte (`outils/listes/doublons_tanzanie.txt`).
 - **Biais et limites** :
-    - les tiges n'apparaissent que dans les classes malades ; sans tri, un modèle pourrait apprendre « tige = malade ». J'ai regardé 40 images tirées au hasard dans chacun des 6 dossiers : je n'ai trouvé des tiges que dans Fusarium, et aucune dans les 80 images Black Sigatoka. J'ai ensuite passé en revue, sur des planches de vignettes, les 4 697 images Fusarium : 317 sont des tiges (273 dans FUSARIUM WILT_1, 44 dans FUSARIUM WILT_2), toutes des coupes du pseudo-tronc ou du bulbe, faciles à reconnaître (forme ronde ou fibres, anneaux bruns sur fond blanc). J'ai fait de même pour les 5 767 images Black Sigatoka : une seule est une tige (`BLACK SIGATOKA_2/Image_6450.jpg`). J'écarte ces 318 images de l'entraînement, ce qui laisse 4 380 images de feuilles Fusarium et 5 766 images de feuilles Black Sigatoka. Le déséquilibre « tige = Fusarium » est donc le vrai risque de ce jeu ;
+    - les tiges n'apparaissent que dans les classes malades ; sans tri, un modèle pourrait apprendre « tige = malade ». J'ai regardé 40 images tirées au hasard dans chacun des 6 dossiers : je n'ai trouvé des tiges que dans Fusarium, et aucune dans les 80 images Black Sigatoka. J'ai ensuite passé en revue à l'œil, sur des planches de vignettes, toutes les images Fusarium et Black Sigatoka : 318 tiges (317 Fusarium et une seule Black Sigatoka, `BLACK SIGATOKA_2/Image_6450.jpg`), toutes des coupes du pseudo-tronc ou du bulbe, faciles à reconnaître (forme ronde ou fibres, anneaux bruns sur fond blanc). Pour vérifier ce tri, j'ai ensuite classé automatiquement les 30 064 photos de tous les jeux de feuilles selon leur ressemblance avec 6 photos de tiges et 42 photos de feuilles (`outils/reperer_tiges.py`, réseau EfficientNet-B0 pré-entraîné), et j'ai regardé les 411 premières. Ce classement a trouvé 80 tiges que j'avais manquées, sur une planche sautée (`FUSARIUM WILT_1/Image_1949` à `Image_2032`), et aucune tige dans les autres jeux (Tanzanie 2025, Pérou, Bangladesh). J'écarte donc 398 images de tiges (liste dans `outils/listes/tiges_tanzanie_2023.txt`). Avec les 3 copies exactes, il reste 15 691 images de feuilles : 5 627 saines, 5 766 Black Sigatoka et 4 298 Fusarium. Le déséquilibre « tige = Fusarium » est donc le vrai risque de ce jeu ;
     - certains formats d'image n'existent que dans une classe (640 × 288 px chez les saines, 640 × 480 px chez Fusarium) : toutes les images sont ramenées à 224 × 224 px (`outils/preparer_feuilles.py`), pour que le modèle ne puisse pas s'en servir ;
     - cadrage : gros plans qui remplissent presque toute l'image, avec très peu de fond. Les feuilles saines montrent souvent la nervure centrale ;
     - lumière : photos de jour. Une partie des images Black Sigatoka a une teinte violette ou bleutée, sans doute un réglage des couleurs du téléphone ;
@@ -25,12 +25,13 @@ Mis à jour le 28/10/2026.
 - **Licence** : CC BY 4.0.
 - **Résolution** : smartphone, 4624 × 3468 px pour la grande majorité des images (sondage de 200 images par dossier), quelques images recadrées.
 - **Date d'acquisition** : novembre 2022 à janvier 2023 (article) ; les métadonnées des photos vont du 22/11/2022 au 20/01/2023. Autre téléphone que pour 2023 (Samsung SM-A715F), pas de position GPS.
-- **Composition** : le jeu complet compte 11 767 images de feuilles (3 339 saines, 3 496 Black Sigatoka, 4 932 Fusarium Wilt Race 1), réparties en 9 archives. J'en ai téléchargé une par classe (BLACK SIGATOKA-1, FUSARIUM WILT-1, HEALTHY-1), soit 3 001 images : 1 000 saines, 1 000 Black Sigatoka, 1 001 Fusarium Wilt Race 1. Ce sous-ensemble équilibré suffit pour la validation.
+- **Composition** : 11 767 images de feuilles (3 339 saines, 3 496 Black Sigatoka, 4 932 Fusarium Wilt Race 1), réparties en 9 archives, 3 par classe. Au départ, je n'en avais téléchargé qu'une par classe (`HEALTHY-1`, `BLACK SIGATOKA-1`, `FUSARIUM WILT-1`, 3 001 images). Je les utilise maintenant toutes : une validation plus grande rend le choix des seuils plus fiable. Après retrait d'une copie exacte (`HEALTHY-2/HEALTHY_1926.jpg`), il reste 11 766 images.
 - **Découpage** : validation du modèle maladies.
-- **Risques de fuite** : voir Tanzanie 2023. La séparation entre les deux jeux est temporelle (2021 contre 2022-2023), pas géographique. J'ai recherché les doublons entre les deux jeux (empreinte d'image, puis comparaison des images réduites, puis vérification à l’œil des 29 paires les plus proches) : je n'en ai trouvé aucun. Cette méthode repère les copies d'une même photo ; elle ne garantit pas qu'une même feuille n'a pas été photographiée à nouveau sous un autre angle.
+- **Risques de fuite** : voir Tanzanie 2023. La séparation entre les deux jeux est temporelle (2021 contre 2022-2023), pas géographique. Je recherche les doublons sur tous les jeux de feuilles à la fois (`outils/preparer_feuilles.py`) : empreinte d'image (au plus 4 bits de différence), puis deux confirmations en comparant les images réduites (32 × 32 px en couleur, puis 112 × 112 px en gris, corrélation d'au moins 0,9), puis vérification à l'œil. La 2e confirmation est nécessaire : sans elle, la méthode signalait 4 356 paires, presque toutes fausses, parce que deux feuilles différentes ont souvent la même texture uniforme. Avec elle, il reste 81 paires : 42 dans le Bangladesh, 31 dans Tanzanie 2023, 5 dans le Pérou, 3 dans Tanzanie 2025, et **aucune entre deux jeux différents**. Je n'écarte que les copies exactes (mêmes détails aux mêmes endroits) ; les rafales restent, puisqu'elles sont dans le même jeu. Cette méthode repère les copies d'une même photo ; elle ne garantit pas qu'une même feuille n'a pas été photographiée à nouveau sous un autre angle.
 - **Biais et limites** :
     - même pays et même équipe que le jeu d'entraînement, donc des scores de validation probablement optimistes. C'est pour cette raison que je teste sur un autre pays ;
     - cadrage différent du jeu 2023 : feuilles souvent entières, avec du fond (sol, autres plants, ciel), et non des gros plans. Le modèle sera donc validé sur des images qui ne ressemblent pas tout à fait à son entraînement ;
+    - comme en 2023, chaque classe a surtout été photographiée à des jours différents (métadonnées EXIF, toutes les photos sont datées) : saines les 22 et 23/11/2022 (2 224 photos) puis du 16 au 18/01/2023 (1 115), Fusarium du 6 au 22/12/2022 (4 344) puis du 18 au 20/01/2023 (588), Black Sigatoka les 12 et 13/01/2023 (3 422) puis les 18 et 20/01 (74). Seul le 18/01/2023 réunit les trois classes. Le biais « classe = jour » existe donc aussi dans la validation ;
     - dans un échantillon de 24 images par classe, des tuyaux d'irrigation bleus apparaissent derrière 3 feuilles saines, et jamais dans les autres classes : un modèle pourrait associer ce décor à la classe saine ;
     - dans ce même échantillon, 2 feuilles étiquetées saines portent des taches brunes (`HEALTHY_453.jpg`, `HEALTHY_486.jpg`) : il peut y avoir des erreurs d'étiquetage.
 
@@ -143,9 +144,19 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 **MobileNetV3-Large (maladies)**
 
 - **Modèle** : poids `IMAGENET1K_V2` de torchvision, pré-entraînés sur ImageNet-1k (1,2 million de photos, 1 000 classes d'objets).
-- **Usage** : point de départ du modèle maladies. Je remplace la dernière couche (3 classes : saine, Black Sigatoka, Fusarium), puis j'entraîne tout le réseau sur Tanzanie 2023 (`entrainement/maladies.ipynb`).
-- **Pourquoi** : réseau léger, conçu pour tourner sans GPU, comme le demande le sujet ; le pré-entraînement évite d'apprendre à partir de zéro avec seulement 15 774 photos.
-- **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie ni du Bangladesh.
+- **Usage** : point de départ du modèle maladies. Je remplace la dernière couche (3 classes : saine, Black Sigatoka, Fusarium), puis j'entraîne tout le réseau sur Tanzanie 2023 et le Pérou (`entrainement/maladies_v2_kaggle.ipynb`).
+- **Pourquoi** : réseau léger, conçu pour tourner sans GPU, comme le demande le sujet ; le pré-entraînement évite d'apprendre à partir de zéro avec seulement 16 959 photos.
+- **Risque de fuite** : ImageNet ne contient pas les photos de Tanzanie, du Pérou ni du Bangladesh.
+
+**EfficientNet-B0 (maladies, comparaison ; tri des tiges)**
+
+- **Modèle** : poids `IMAGENET1K_V1` de torchvision, pré-entraînés sur ImageNet-1k.
+- **Usage** : comparé à MobileNetV3 pour le modèle maladies, avec les mêmes réglages (résultats dans [experiences.md](experiences.md)). Sert aussi, sans réentraînement, à classer les photos selon leur ressemblance à des tiges (`outils/reperer_tiges.py`).
+
+**EfficientNet-B2 et ConvNeXt-Tiny (maladies, comparaison)**
+
+- **Modèles** : poids `IMAGENET1K_V1` de torchvision, pré-entraînés sur ImageNet-1k. EfficientNet-B2 : 7,7 millions de paramètres ; ConvNeXt-Tiny : 28 millions.
+- **Usage** : comparés à MobileNetV3 et EfficientNet-B0, avec la même recette et des photos en 224 × 224 px pour tous. Les deux restent utilisables sans GPU.
 
 **DeepForest (comptage)**
 
@@ -169,6 +180,23 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 - **Risques de fuite** : les photos successives d'un même vol se recouvrent et montrent les mêmes plants ; c'est pourquoi un vol entier va d'un seul côté. Je ne sais pas si les dossiers correspondent à des parcelles différentes ou à la même parcelle à des dates différentes.
 - **Biais et limites** : bananeraie presque pure, plants bien séparés, très différente des fermes mélangées de ReforesTree. Sur les 12 images regardées, presque chaque bananier a sa boîte (quelques oublis au bord des images) : les annotations semblent beaucoup plus complètes que celles de ReforesTree. Photos brutes, donc vue un peu en perspective sur les bords. Taille du pixel estimée.
 - **Utilisation** : test de la méthode simple sur une zone jamais vue, et apprentissage de DeepForest (seul, puis mélangé à ReforesTree). Résultats : voir [experiences.md](experiences.md).
+
+## 9. Feuilles de bananier — Pérou (Mendeley Data)
+
+- **Provenance** : Bazan, Rojas-Córdova, Sánchez-Flores & Santa-María (Universidad Nacional de San Martín), *Banana Leaf Image Dataset for Classification of Sigatoka, Cordana, and Healthy Leaves*, Mendeley Data, version 1, [DOI 10.17632/hzttvh774g.1](https://doi.org/10.17632/hzttvh774g.1), téléchargé le 29/10/2026. Photos prises dans les districts de Calzada et Habana (province de Moyobamba, région San Martín, Amazonie péruvienne).
+- **Licence** : CC BY 4.0.
+- **Résolution** : smartphones, d'après les métadonnées des photos : Xiaomi 14T Pro pour la plupart, aussi Xiaomi M2003J15SC et Samsung Galaxy A06. Surtout 3072 × 4096 px. Pas de position GPS.
+- **Date d'acquisition** : non indiquée sur la page du jeu. Les métadonnées des photos vont du 08/01/2025 au 22/06/2025, et saines et Sigatoka ont été photographiées sur les mêmes mois (janvier à juin) : pas de biais « classe = jour » visible, contrairement aux jeux tanzaniens.
+- **Composition** : 1 773 images : 544 saines (dossier `sanas`), 724 Sigatoka, 505 Cordana. J'utilise les saines et les Sigatoka, soit 1 268 images.
+- **Découpage** : entraînement du modèle maladies, avec Tanzanie 2023. Le jeu étant petit, chaque photo du Pérou est tirée 3 fois plus souvent, ce qui fait environ 20 % de chaque tour d'entraînement.
+- **Risques de fuite** : autre pays et autre équipe que les autres jeux. Aucun doublon avec les autres jeux ; 5 paires très proches à l'intérieur du jeu, aucune copie exacte. La Cordana fait aussi partie des maladies inconnues du test (Bangladesh) : je ne lis jamais ces images (`outils/preparer_feuilles.py` ne les déclare pas), pour qu'elle reste inconnue du modèle.
+- **Biais et limites** : le type de Sigatoka (noire ou jaune) n'est pas précisé : je la compte comme Black Sigatoka. Pas de Fusarium. Plusieurs téléphones.
+
+## 10. Jeu écarté — Éthiopie (Mendeley Data)
+
+- **Provenance** : Hailu (Addis Ababa Science and Technology University), *Banana Leaf Disease Images*, Mendeley Data, version 1, [DOI 10.17632/rjykr62kdh.1](https://doi.org/10.17632/rjykr62kdh.1). Photos prises chez quatre agriculteurs d'Arba Minch Zuria et de Mierab Abaya. Licence CC BY 4.0.
+- **Composition** : 155 saines, 320 Sigatoka, 814 Xanthomonas (dossier `resized`).
+- **Pourquoi je l'écarte** : en regardant les planches de vignettes, beaucoup de photos ne sont pas nettes. Je ne l'utilise ni pour l'entraînement, ni pour la validation, ni pour le test.
 
 ## Écart entre photos de feuilles et images aériennes
 
