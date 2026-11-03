@@ -1,6 +1,6 @@
 # Journal des essais — Field Scan
 
-Mis à jour le 02/11/2026. Les données utilisées sont décrites dans le [carnet de données](carnet_donnees.md).
+Mis à jour le 03/11/2026. Les données utilisées sont décrites dans le [carnet de données](carnet_donnees.md).
 
 ## Comment je note
 
@@ -56,6 +56,8 @@ Apprentissage sur Tanzanie 2023, validation sur Tanzanie 2025 (3 001 images), te
 Données nettoyées à nouveau (voir le carnet) : apprentissage sur Tanzanie 2023 + Pérou (16 959 images), validation sur toute la Tanzanie 2025 (11 766), test sur le Bangladesh (893). Tous les choix sont faits sur la validation, avec des règles fixées avant chaque essai ; le Bangladesh n'a servi à aucun choix.
 
 **Modèle final retenu :** ConvNeXt-Tiny pré-entraîné sur ImageNet, Pérou tiré 3 fois plus souvent, recompression JPEG et lissage des étiquettes, **moyenne de 3 modèles** entraînés avec des graines différentes, 4 vues.
+
+**Résultat au test (Bangladesh, autre pays, utilisé une seule fois) :** 95 % des Sigatoka nommées, aucune dite saine ; 1 feuille saine sur 90 signalée malade ; aucune des 331 maladies inconnues dite saine (21 % en « je ne sais pas », les autres signalées malades). Détail en fin de section.
 
 #### Comment le modèle apprend
 
@@ -114,14 +116,17 @@ Si la confiance du modèle est trop basse (seuil qui garde 95 % des photos de va
 | ConvNeXt-Tiny (27,8 M) | Pérou 0 | 242 | 23 | 21 | 2,8 % | 95,0 % | 941 / 970 / 938 | 6 |
 | ConvNeXt-Tiny | Pérou 3 | 213 | 48 | 40 | 1,0 % | 96,0 % | 992 / 983 / 911 | 9 |
 | ConvNeXt-Tiny | Pérou 3, JPEG, lissage | 213 | 36 | 29 | 1,5 % | 95,5 % | 963 / 977 / 913 | 4 |
-| **ConvNeXt-Tiny** | **Pérou 3, JPEG, lissage, moyenne de 3** | **167** | **30** | **26** | 1,8 % | **96,5 %** | **993 / 981 / 922** | 10 |
+| ConvNeXt-Tiny | Pérou 3, JPEG, lissage, moyenne de 3 | 167 | 30 | 26 | 1,8 % | 96,5 % | 993 / 981 / 922 | 10 |
+| **ConvNeXt-Tiny** | **mêmes réglages, entraînement final (celui testé)** | **154** | **30** | **25** | **1,0 %** | **96,9 %** | **988 / 985 / 923** | **7** |
 
 - **Le réseau** : ConvNeXt-Tiny fait nettement mieux que les autres (coût 213 contre 337 pour B2, avec ou sans le Pérou). Il est 6 à 7 fois plus gros que B0, mais reste utilisable sans GPU ;
 - **le Pérou** : avec MobileNetV3, plus il y a de Pérou, meilleur est le résultat sur tous les critères (642, 564, 427). Avec les autres réseaux, il réduit surtout les fausses alertes, parfois au prix d'un peu plus de Fusarium ratées (le Pérou n'a pas de Fusarium). Le coût baisse avec le Pérou pour les 4 réseaux ;
-- **la moyenne de 3 modèles** baisse le coût de 191 à 167 : les erreurs dues au hasard d'un entraînement se compensent ;
+- **la moyenne de 3 modèles** baisse le coût de 191 à 167 (puis de 196 à 154 lors de l'entraînement final) : les erreurs dues au hasard d'un entraînement se compensent ;
 - **le hasard d'un entraînement** : deux entraînements identiques de MobileNetV3 ont donné 427 et 419 ; les 3 ConvNeXt de la moyenne, seuls et sur une vue, 225, 243 et 201. Je ne tire donc de conclusion que des écarts nets ou réguliers.
 
-**Détail du modèle final sur la validation** (seuil d'alerte 0,25, seuil pour nommer la maladie 0,50, seuil de confiance 0,640) :
+Le modèle testé est celui de l'entraînement final (mêmes réglages, réentraîné avant le test). Ses seuils, réglés sur la validation : alerte 0,30, nom de la maladie 0,50, confiance 0,646. Le seuil pour nommer la maladie tombe à 0,50 : le nom est assez fiable pour être toujours donné, la réponse « malade, non identifiée » n'est donc jamais utilisée.
+
+**Détail par classe sur la validation** (entraînement précédent avec les mêmes réglages ; l'entraînement final donne des chiffres très proches : 30 malades dites saines, 1,0 % de fausses alertes, nom juste 96,9 %) :
 
 | Classe réelle | Saine | Black Sigatoka | Fusarium | Malade, non identifiée | Je ne sais pas |
 |---|---|---|---|---|---|
@@ -147,20 +152,41 @@ La distance (Mahalanobis, sur le résumé de 1 280 nombres que le réseau calcul
 
 #### Cartes d'attention
 
-Pour vérifier où le modèle regarde, j'utilise Grad-CAM : en rouge, les zones qui ont le plus pesé dans sa réponse (modèle MobileNetV3 du 01/11 ; à remplacer par les cartes du modèle final).
+Pour vérifier où le modèle regarde, j'utilise Grad-CAM : en rouge, les zones qui ont le plus pesé dans sa réponse (premier des 3 modèles finaux).
 
-![Cartes d'attention du modèle maladies v2](images/maladies_cartes_attention.jpg)
+![Cartes d'attention du modèle maladies final](images/maladies_cartes_attention.jpg)
 *Photos de validation tirées au hasard : 4 saines, 4 Black Sigatoka, 4 Fusarium, et 4 Fusarium prises pour de la Black Sigatoka.*
 
-- Black Sigatoka : le modèle regarde les taches et les stries noires ;
-- Fusarium : zones jaunies ou desséchées, de façon plus diffuse ;
-- Fusarium pris pour de la Black Sigatoka : le modèle s'arrête sur une petite marque locale (déchirure, tache sèche) qu'il prend pour une lésion ;
-- saines : sur 2 photos sur 4, le rouge est en bas de la nervure centrale. C'est peut-être un raccourci (« nervure visible = saine »), à surveiller : 4 photos ne suffisent pas pour conclure ;
-- aucun raccourci de décor visible (fond, mains, tuyaux).
+- saines : l'attention est répartie sur le limbe et les bords, et non plus concentrée sur la nervure centrale comme avec le premier MobileNetV3 (zone masquée et recadrages) ;
+- Black Sigatoka : le modèle regarde les lésions (4e photo), mais aussi parfois des bords d'image ;
+- Fusarium : zones jaunies ou desséchées ;
+- Fusarium pris pour de la Black Sigatoka : le modèle s'arrête sur une marque locale (tache sèche, bord déchiré) qu'il prend pour une lésion ;
+- aucun raccourci de décor net (fond, mains, tuyaux), mais les cartes de ConvNeXt sont plus diffuses que celles de MobileNetV3 : elles montrent une région, pas une tache précise. 16 photos ne suffisent pas pour conclure.
 
-#### Test Bangladesh
+#### Test Bangladesh (03/11/2026, une seule fois)
 
-En cours : lancé une seule fois avec le modèle final, après tous les réglages.
+Modèle final, avec les seuils réglés sur la validation, sans aucun changement après le test. La Sigatoka du Bangladesh (type non précisé) compte comme Black Sigatoka.
+
+| Classe réelle (Bangladesh) | Saine | Black Sigatoka | Fusarium | Je ne sais pas |
+|---|---|---|---|---|
+| Saine (90) | **86 (95,6 %)** | 0 | 1 | 3 |
+| Sigatoka (472) | 0 | **449 (95,1 %)** | 10 | 13 |
+| Cordana, inconnue (159) | 0 | 93 | 13 | **53 (33 %)** |
+| Pestalotiopsis, inconnue (172) | 0 | 138 | 17 | **17 (10 %)** |
+
+| | v1 | v2 |
+|---|---|---|
+| Bonnes réponses sur les classes connues (saine et Sigatoka) | 69 % | **95,2 %** |
+| Sigatoka nommée | 66 % | **95,1 %** |
+| Sigatoka dite saine | — | **0 %** |
+| Feuilles saines signalées malades | 3 % | **1,1 %** (1 sur 90) |
+| Maladies inconnues en « je ne sais pas » | 20 % | 21 % |
+| Maladies inconnues dites saines | — | **0 %** |
+
+- **Le changement de pays tient** : la v1 retrouvait 66 % des Sigatoka au Bangladesh, la v2 en nomme 95 % et n'en déclare aucune saine, pour des scores de validation proches ;
+- **aucune feuille malade n'est dite saine**, ni Sigatoka, ni maladie inconnue : toutes reçoivent une alerte ou un « je ne sais pas » ;
+- **le « je ne sais pas » reste faible** (21 %, comme en v1), comme la simulation l'annonçait pour des maladies à taches : 70 % des maladies inconnues sont prises pour de la Black Sigatoka. La confiance sépare mal connu et inconnu (AUROC 0,73 ; 0,5 = hasard). Pour un agriculteur, la feuille est quand même signalée malade, mais avec un nom qui peut être faux ;
+- le test ne contient pas de Fusarium : la reconnaissance du Fusarium dans un autre pays n'est pas mesurée.
 
 ## 3. Vigueur et stress hydrique (Sentinel-2, `run.py`)
 
