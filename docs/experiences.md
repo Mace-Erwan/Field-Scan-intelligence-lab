@@ -1,6 +1,6 @@
 # Journal des essais — Field Scan
 
-Mis à jour le 03/11/2026. Les données utilisées sont décrites dans le [carnet de données](carnet_donnees.md).
+Mis à jour le 04/11/2026. Les données utilisées sont décrites dans le [carnet de données](carnet_donnees.md).
 
 ## Comment je note
 
@@ -12,35 +12,34 @@ Mis à jour le 03/11/2026. Les données utilisées sont décrites dans le [carne
 
 ## 1. Comptage des bananiers
 
-Validation : réglages choisis sur Leonor ou par validation croisée par ferme ; Manuel sert à comparer les méthodes. Nestor (test) a été noté une fois par erreur, avec la méthode simple (F1 0,40) ; il ne servira plus qu'une fois, à la fin.
+### v2 (`entrainement/comptage_v2_kaggle.ipynb`)
 
-| Essai | Données d'apprentissage | F1 sur Manuel, honnête | F1 sur Manuel, optimiste |
+**Données** (préparées par `outils/preparer_comptage.py`, détail dans le carnet, sections 4, 8 et 11) : toutes les images sont remises à 5 cm par pixel, et chaque bananier devient un point (le centre de sa boîte) avec le diamètre de sa couronne. Découpage par ferme, par vol ou par zone, jamais au hasard ; aucun doublon entre les parties (`outils/verifier_doublons_comptage.py`).
+
+| Jeu | Apprentissage | Validation | Test (une seule fois, à la fin) |
 |---|---|---|---|
-| Méthode simple (indice de vert ExG, sommets) | aucune (3 réglages) | 0,204 | — |
-| DeepForest pré-entraîné, sans réapprentissage | — | — | 0,208 |
-| Agroforestry inventory (modèle bananier publié, RF-DETR) | — | — | 0,218 |
-| DeepForest, 10 époques (essai 0) | 4 fermes ReforesTree | — | 0,291 |
-| DeepForest, 30 époques (essai 1) | 4 fermes ReforesTree | — | 0,262 |
-| DeepForest | Count banana plants | 0,197 | 0,292 |
-| **DeepForest mixte** | **Count banana + Flora, Guevara, Arteaga** | **0,254** | 0,262 |
+| ReforesTree (fermes mélangées) | Flora, Leonor, Guevara, Arteaga : 621 bananiers | Manuel : 133 | Nestor : 235 |
+| Count banana plants (bananeraie) | vols 0221 et 0222 : 302 images, 4 060 bananiers | vols 0223 et 0224 : 98 images, 611 | — |
+| Plants-bana `segmento` (bananeraie dense) | zone de gauche : 47 images, 12 039 | bas droite, ouest : 17 images, 1 870 | 26 images, 2 801 |
+| Plants-bana `corte` | 49 images, 809 | — | — |
 
-**Validation croisée par ferme** (chaque ferme notée avec un modèle qui ne l'a pas vue) :
-- méthode simple : F1 global 0,247 (précision 0,18, rappel 0,41), de 0,12 (Arteaga) à 0,41 (Flora) ;
-- DeepForest réentraîné sur ReforesTree : 0,175 sur 4 fermes (réglage commun, optimiste), 0,12 avec un réglage choisi sur les autres fermes, contre 0,255 pour la méthode simple sur les mêmes fermes. Le tour où Manuel est la ferme notée a échoué deux fois : la loss n'est plus un nombre (NaN) dès la première époque, le modèle ne détecte plus rien. Cause non trouvée ; j'ai ajouté une vérification de la loss dans les notebooks ;
-- DeepForest mixte (Count banana + les fermes d'entraînement) : 0,288 sur 4 fermes contre 0,255 pour la méthode simple sur les mêmes fermes (Flora 0,440 contre 0,410, Leonor 0,267 contre 0,232, Guevara 0,227 contre 0,165, Arteaga 0,107 contre 0,119). Le tour Manuel a encore donné une loss NaN, pour la 3e fois.
+![Comptage : la référence](images/comptage_references.jpg)
+*La référence, sans aucun modèle : un morceau de chaque jeu. Point rouge : bananier annoté par les auteurs du jeu ; cercle blanc : rayon de 1 m autour de lui, dans lequel une prédiction doit tomber pour compter comme juste.*
 
-**Count banana plants, zone jamais vue :**
-- méthode simple, réglages de ReforesTree non retouchés : rappel 86 %, précision 31 %, F1 environ 0,46 (0,31 à 0,54 selon la taille de pixel supposée) ;
-- DeepForest entraîné sur Count banana plants : F1 0,876 sur les vols de validation (précision 0,86, rappel 0,90), score optimiste car le seuil a été choisi sur ces mêmes vols ;
-- DeepForest mixte : 0,69 sur ces mêmes vols avec le réglage choisi sur Leonor (0,85 au mieux).
+**Deux modèles, mêmes données, même notation :**
+- **détecteur de centres** : ResNet-18 pré-entraîné + un petit décodeur. Il produit une carte : pour chaque carré de 20 cm, la probabilité qu'un centre de bananier s'y trouve. Pour apprendre, la carte idéale a une petite bosse sur chaque bananier, d'autant plus large que sa couronne est grande ; la perte focale empêche le modèle de tout prédire à zéro (presque tous les carrés sont vides). Un bananier = un sommet de la carte (le plus fort dans un carré de 1,4 m) au-dessus du seuil. 30 époques de 2 000 morceaux de 448 px tirés au hasard ; part de chaque jeu : ReforesTree 30 %, `segmento` 30 %, Count banana 25 %, `corte` 15 % ; miroirs, quarts de tour, changement d'échelle (0,8 à 1,25), luminosité, contraste et saturation ;
+- **DeepForest** : détecteur de boîtes, pré-entraîné sur des couronnes d'arbres. Tuiles de 400 px (les images plus petites sont complétées par du noir pour garder la même échelle), mêmes parts de jeux (tuiles répétées), 10 époques, miroirs et luminosité. Les boîtes en double sont fusionnées au-delà d'un recouvrement testé entre 0,2 et 0,5 (par défaut, DeepForest fusionne dès 0,05, ce qui efface des bananiers voisins dans une bananeraie dense).
 
-**Ce que j'en retiens :**
-- avec des annotations propres, DeepForest apprend très bien à reconnaître un bananier (0,876, optimiste, sur une bananeraie jamais vue) ;
-- sur Manuel, toutes les méthodes plafonnent entre 0,26 et 0,29, même avec le meilleur réglage. La limite semble venir des annotations de Manuel (bananiers non annotés, boîtes mal placées : voir le carnet, section 4) plutôt que des modèles ;
-- le bon seuil dépend du type de plantation (bananeraie pure ou ferme mélangée). Un réglage choisi sur une ferme mélangée (Leonor) se transfère bien à une autre ferme mélangée (Manuel) ;
-- mélanger les deux jeux donne le meilleur score honnête sur Manuel (0,254), au prix d'une baisse sur la bananeraie pure.
+![Comptage : apprentissage du détecteur de centres](images/comptage_apprentissage_centres.jpg)
+*Ce que voit le détecteur de centres pendant l'apprentissage : un morceau tiré au hasard (en haut) et la carte qu'il doit reproduire (en bas).*
 
-**À faire :** noter les méthodes sur un échantillon que j'ai pointé moi-même ; choisir le réglage final par validation croisée ; tester l'effet de la résolution ; test unique sur Nestor.
+**Règle de choix, fixée avant les essais** : la moyenne des F1 sur les 3 validations (Manuel, Count banana, `segmento`). Pour chaque modèle, elle choisit l'époque et le seuil (et le recouvrement de fusion pour DeepForest), puis elle départage les deux modèles.
+
+**Résultats** : en cours (04/11/2026).
+
+### Premier essai
+
+- DeepForest entraîné sur Count banana plants seul : F1 0,876 sur ses vols de validation (précision 0,86, rappel 0,90). Score optimiste : le seuil a été choisi sur ces mêmes vols.
 
 ## 2. Maladies
 

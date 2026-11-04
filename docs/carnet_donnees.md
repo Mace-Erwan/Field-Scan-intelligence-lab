@@ -1,6 +1,6 @@
 # Carnet de données — Field Scan
 
-Mis à jour le 02/11/2026.
+Mis à jour le 04/11/2026.
 
 ## Vue d'ensemble des photos de feuilles
 
@@ -69,52 +69,35 @@ Mis à jour le 02/11/2026.
 - **Licence** : CC BY 4.0.
 - **Résolution** : drone Mavic 2 Pro, caméra RGB, vol à 40 m. Une orthomosaïque par ferme, de 0,97 à 1,19 cm par pixel selon la ferme (fichiers `.tfw`), erreur de positionnement de 0,25 à 0,69 m. Je réduis les images 4 fois pour travailler plus vite : 3,9 à 4,8 cm par pixel selon la ferme.
 - **Date d'acquisition** : 27 et 28 octobre, probablement 2020 (rapport de vol daté du 1.11.2020).
-- **Composition** : chaque arbre est annoté par une boîte autour de sa couronne, étiquetée bananier ou non (`annotations/cleaned/clean_annotations.csv`, 7 969 boîtes). Les auteurs ont annoté sur des tuiles qui se chevauchent, sans fusionner les doublons : un même arbre a souvent deux boîtes, et toutes celles d'Arteaga sont en double. Je fusionne les boîtes d'une même ferme qui se recouvrent à plus de 50 % (`outils/preparer_reforestree.py`) : il reste 5 328 arbres, dont 2 731 bananiers. Chaque ferme a une **parcelle** inventoriée sur le terrain (shapefile `Merged_final_plots`) ; les annotations ne sont complètes qu'à l'intérieur. Dans les parcelles :
+- **Composition** : chaque arbre est annoté par une boîte autour de sa couronne, étiquetée bananier ou non (`annotations/cleaned/clean_annotations.csv`, 7 969 boîtes). Les auteurs ont annoté sur des tuiles qui se chevauchent, sans fusionner les doublons : un même arbre a souvent deux boîtes, et toutes celles d'Arteaga sont en double. Je fusionne les boîtes d'une même ferme qui se recouvrent à plus de 50 % (`outils/preparer_reforestree.py`) : il reste 5 328 arbres, dont 2 731 bananiers. Les boîtes couvrent toute l'orthomosaïque, mais certaines zones hors des parcelles n'en ont aucune (par exemple le bord droit de Manuel, image ci-dessous). Chaque ferme a une **parcelle** inventoriée sur le terrain (shapefile `Merged_final_plots`) : je ne garde que l'intérieur. Dans les parcelles :
 
 | Ferme | Surface | Arbres | Bananiers | Part de bananiers |
 |---|---|---|---|---|
-| Flora Pluas | 0,40 ha | 1 051 | 701 | 67 % |
-| Leonor Aspiazu | 0,48 ha | 631 | 292 | 46 % |
-| Carlos Vera Guevara | 0,43 ha | 769 | 202 | 26 % |
-| Carlos Vera Arteaga | 0,53 ha | 142 | 61 | 43 % |
-| Manuel Macias | 0,41 ha | 439 | 226 | 51 % |
-| Nestor Macias | 0,45 ha | 965 | 667 | 69 % |
+| Flora Pluas | 0,40 ha | 335 | 291 | 87 % |
+| Leonor Aspiazu | 0,48 ha | 331 | 220 | 66 % |
+| Carlos Vera Guevara | 0,43 ha | 319 | 52 | 16 % |
+| Carlos Vera Arteaga | 0,53 ha | 137 | 58 | 42 % |
+| Manuel Macias | 0,41 ha | 190 | 133 | 70 % |
+| Nestor Macias | 0,45 ha | 389 | 235 | 60 % |
 
-- **Découpage** : par ferme entière. Entraînement : Flora, Leonor, Guevara, Arteaga. Validation : Manuel. Test : Nestor, que je ne regarde qu'une fois, à la fin. Pour des scores plus fiables, je fais aussi une validation croisée par ferme sur les 5 fermes hors Nestor : chaque ferme sert une fois de validation. Le comptage est noté uniquement à l'intérieur des parcelles. Pour DeepForest, les images sont découpées en tuiles de 400 × 400 pixels (environ 18 m), et tout ce qui est hors de la parcelle est peint en noir (`outils/preparer_tuiles_comptage.py`).
+![ReforesTree : boîtes et parcelles](images/reforestree_parcelles_boites.jpg)
+*Quatre fermes en entier. En jaune la parcelle inventoriée, en cyan les bananiers annotés, en rose les autres arbres annotés (un point = le centre d'une boîte).*
+
+- **Position des arbres** : le fichier donne pour chaque arbre sa boîte (`xmin`, `ymin`, `xmax`, `ymax` dans la tuile, `X`, `Y` pour son centre dans l'orthomosaïque) et une longitude-latitude (`lon`, `lat`). **Les colonnes `lon`, `lat` sont fausses sur 5 fermes sur 6** : elles sont calculées à partir de `X`, `Y` avec une mauvaise taille de pixel (par exemple 0,74 cm au lieu de 1,13 cm pour Manuel, 0,52 cm au lieu de 0,97 cm pour Flora). Les points sont donc tassés vers le coin de l'image, à environ 20 m de leur boîte en moyenne (17 à 21 m selon la ferme). Seule Arteaga est juste (1,03 cm au lieu de 1,04 cm, 1,3 m d'écart). Vérifications : les tuiles sont identiques à l'orthomosaïque au même endroit ; 79 à 98 % des centres de boîtes de bananiers tombent sur de la végétation (plus verte que la médiane de l'image), contre 32 à 56 % des positions `lon`, `lat`, autant qu'au hasard. **J'utilise donc le centre des boîtes** (`X`, `Y`), jamais `lon`, `lat`.
+
+![ReforesTree : boîtes et longitude-latitude](images/reforestree_boites_vs_lonlat.jpg)
+*Une tuile brute de Manuel (environ 1 cm par pixel). En bleu les boîtes de bananiers du fichier, en rouge la longitude-latitude des mêmes bananiers : le même dessin, rétréci et décalé.*
+
+- **Découpage** : par ferme entière. Apprentissage : Flora, Leonor, Guevara, Arteaga. Validation : Manuel. Test : Nestor, que je ne regarde qu'une fois, à la fin. Le comptage est noté uniquement à l'intérieur des parcelles. Pour le comptage, chaque ferme devient une seule image à 5 cm par pixel, recadrée sur sa parcelle avec 2 m de marge, noire hors de la parcelle (`outils/preparer_comptage.py`).
 - **Risques de fuite** : les tuiles d'une même ferme se chevauchent ; un découpage au hasard mettrait les mêmes arbres en entraînement et en test, d'où la séparation par ferme. Le modèle DeepForest fourni avec le jeu a été entraîné par les auteurs sur ces mêmes fermes : je ne l'utilise pas.
 - **Biais et limites** :
     - fermes de cacao où le bananier est une culture secondaire, mêlée à d'autres arbres, et non une bananeraie ;
     - les boîtes ne distinguent pas pied mère et rejets ;
-    - hors des parcelles, beaucoup de bananiers visibles n'ont pas de boîte. Dans les parcelles aussi, il manque des bananiers et des boîtes sont mal placées (vérification ci-dessous) ;
-    - Arteaga est très peu dense : 142 arbres dans 0,53 ha, environ 270 par hectare contre environ 2 600 à Flora. Sa parcelle (contour officiel des auteurs, vérifié) est une zone sèche avec beaucoup de petites plantes non annotées ;
+    - hors des parcelles, certaines zones n'ont aucune boîte ; à l'intérieur des parcelles, je n'ai pas encore vérifié à l'œil que chaque bananier a sa boîte ;
+    - Arteaga est très peu dense : 137 arbres dans 0,53 ha, environ 260 par hectare contre environ 840 à Flora. Sa parcelle (contour officiel des auteurs, vérifié) est une zone sèche avec beaucoup de petites plantes non annotées ;
+    - Guevara n'a que 52 bananiers dans sa parcelle (16 % des arbres) ;
     - éclairage différent selon les fermes : ciel couvert à Flora, Nestor, Manuel et Leonor, soleil à Arteaga et Guevara ;
     - l'erreur de positionnement (jusqu'à 0,69 m) est proche de la tolérance de 1 m utilisée pour noter.
-
-### Qualité des annotations : ce que j'ai vérifié à l'œil
-
-![Manuel : parcelle et arbres annotés](images/reforestree_manuel_annotations.jpg)
-*Manuel Macias. En jaune la parcelle inventoriée, en rouge les bananiers annotés, en bleu les autres arbres annotés (un rond = le centre d'une boîte).*
-
-Les bananiers annotés de Manuel sont regroupés dans le sud de la parcelle. Au nord, des bananiers sont visibles sur l'image sans être annotés.
-
-![Flora : carré de 20 m](images/reforestree_flora_zoom_annotations.jpg)
-*Flora Pluas, carré de 20 m au centre de la parcelle, image d'origine (environ 1 cm par pixel). Annotations après fusion des doublons : 90 bananiers (rouge) et 10 autres arbres (bleu). Le point est le centre de la boîte, c'est la position de l'arbre que j'utilise pour noter. Le carré a la largeur de la boîte d'origine (après fusion, je ne garde que le centre et la largeur, la forme est donc approchée).*
-
-Dans les zones denses, les boîtes ne suivent pas toujours les couronnes : certaines n'en couvrent qu'une partie, plusieurs boîtes se partagent parfois une même couronne, et quelques grandes couronnes n'ont aucune boîte.
-
-**Vérification sur 50 fausses alertes.** Sur Manuel, ma méthode simple fait 511 détections, dont 436 sans bananier annoté à moins de 1 m. J'en ai tiré 50 au hasard et je les ai classées à l'œil :
-
-| Ce qu'il y a sous la détection | Nombre |
-|---|---|
-| une autre plante | 22 |
-| **un bananier sans annotation** | **15** |
-| un bananier annoté, mais à plus de 1 m de la détection | 8 |
-| du sol, rien de clair | 5 |
-
-![Bananiers non annotés](images/reforestree_bananiers_non_annotes.jpg)
-*6 des 15 bananiers non annotés (Manuel). Croix jaune = détection de la méthode simple, cercle = 1 m, rond bleu = autre arbre annoté. Aucun bananier n'est annoté dans le cercle.*
-
-Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents des annotations (estimation sur 50 cas, donc imprécise). Le score mesuré sur ReforesTree sous-estime la qualité réelle d'une méthode, et un modèle entraîné sur ces annotations reçoit des exemples contradictoires : un bananier annoté, un bananier identique non annoté. Je ne corrige pas les annotations de validation et de test : la note doit rester comparable et ne pas être ajustée à ma méthode.
 
 ## 5. Images satellite — Sentinel-2 (Copernicus)
 
@@ -179,13 +162,19 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 **DeepForest (comptage)**
 
 - **Modèle** : détecteur de couronnes d'arbres `weecology/deepforest-tree` (bibliothèque DeepForest 2, réseau RetinaNet), pré-entraîné par ses auteurs sur des images aériennes de forêts, à environ 10 cm par pixel.
-- **Usage** : point de départ du détecteur de bananiers. Je le réentraîne sur les bananiers de ReforesTree et de Count banana plants (`entrainement/comptage_deepforest_*.ipynb`).
-- **Limite** : mes images sont à environ 4,5 cm par pixel, deux fois plus fines que celles de son pré-entraînement : les arbres lui paraissent deux fois plus gros.
+- **Usage** : point de départ d'un des deux modèles de comptage. Je le réentraîne sur mes jeux de comptage (ReforesTree, Count banana plants, Plants-bana `segmento` et `corte`) et je le compare au détecteur de centres (`entrainement/comptage_v2_kaggle.ipynb`).
+- **Limite** : mes images sont à 5 cm par pixel, deux fois plus fines que celles de son pré-entraînement : les arbres lui paraissent deux fois plus gros.
 - **Risque de fuite** : ses données de pré-entraînement ne contiennent pas les fermes ReforesTree.
+
+**ResNet-18 (comptage, détecteur de centres)**
+
+- **Modèle** : poids `IMAGENET1K_V1` de torchvision, pré-entraînés sur ImageNet-1k (11 millions de paramètres).
+- **Usage** : base du détecteur de centres. Je garde ses 4 étages et j'ajoute un petit décodeur qui produit une carte : pour chaque carré de 20 cm, la probabilité qu'un centre de bananier s'y trouve (`entrainement/comptage_v2_kaggle.ipynb`).
+- **Risque de fuite** : ImageNet est fait de photos prises au sol ; il ne contient pas mes images de drone.
 
 ## 8. Images drone — Count banana plants (Roboflow Universe)
 
-- **Provenance** : projet [« Count banana plants »](https://universe.roboflow.com/count-banana-plants/count-banana-plants) publié sur Roboflow Universe par « COUNT BANANA PLANTS ». Version **v15 « DATASET FINAL SIN AUG »** (générée le 27/07/2022), téléchargée au format COCO le 28/10/2026. Je l'ai trouvé en cherchant d'autres jeux de bananiers vus par drone, parce que les annotations de ReforesTree sont incomplètes (section 4). Pays, date et auteurs réels : non indiqués.
+- **Provenance** : projet [« Count banana plants »](https://universe.roboflow.com/count-banana-plants/count-banana-plants) publié sur Roboflow Universe par « COUNT BANANA PLANTS ». Version **v15 « DATASET FINAL SIN AUG »** (générée le 27/07/2022), téléchargée au format COCO le 28/10/2026. Je l'ai trouvé en cherchant d'autres jeux de bananiers vus par drone. Pays, date et auteurs réels : non indiqués.
 - **Licence** : CC BY 4.0.
 - **Choix de la version** : le projet a 10 versions des mêmes images. Toutes sauf deux contiennent des copies modifiées des images d'entraînement (retournées, pivotées, plus ou moins claires : ×2 pour la v38, ×3 pour les v25 et v32) ou des images redimensionnées en 456 × 456 (v6 à v9). Ces copies seraient des quasi-doublons et créeraient des fuites. La v15 est la seule grande version sans copie et sans redimensionnement.
 - **Résolution** : 400 images de 480 × 480 pixels, découpées dans 77 photos de drone brutes (le nom du fichier donne le dossier de l'appareil, le numéro de photo et la position du morceau, par exemple `100_0221_0204_0_2880`). Ce ne sont pas des orthomosaïques : pas de coordonnées, et la taille du pixel n'est pas donnée. Je l'estime à environ 3 cm : la boîte médiane d'un bananier fait 105 pixels, pour une couronne adulte d'environ 3 m. C'est une hypothèse, pas une mesure.
@@ -196,8 +185,8 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 
 - **Découpage** : le découpage train / valid / test fourni par Roboflow est fait au hasard, et des morceaux d'une même photo se retrouvent des deux côtés. Je ne l'utilise pas. Je sépare par dossier, que je considère comme un vol : apprentissage `100_0221` + `100_0222` (302 images), validation `100_0223` + `100_0224` (98 images).
 - **Risques de fuite** : les photos successives d'un même vol se recouvrent et montrent les mêmes plants ; c'est pourquoi un vol entier va d'un seul côté. Je ne sais pas si les dossiers correspondent à des parcelles différentes ou à la même parcelle à des dates différentes.
-- **Biais et limites** : bananeraie presque pure, plants bien séparés, très différente des fermes mélangées de ReforesTree. Sur les 12 images regardées, presque chaque bananier a sa boîte (quelques oublis au bord des images) : les annotations semblent beaucoup plus complètes que celles de ReforesTree. Photos brutes, donc vue un peu en perspective sur les bords. Taille du pixel estimée.
-- **Utilisation** : test de la méthode simple sur une zone jamais vue, et apprentissage de DeepForest (seul, puis mélangé à ReforesTree). Résultats : voir [experiences.md](experiences.md).
+- **Biais et limites** : bananeraie presque pure, plants bien séparés, très différente des fermes mélangées de ReforesTree. Sur les 12 images regardées, presque chaque bananier a sa boîte (quelques oublis au bord des images). Photos brutes, donc vue un peu en perspective sur les bords. Taille du pixel estimée.
+- **Utilisation** : apprentissage (vols `100_0221`, `100_0222`) et validation (vols `100_0223`, `100_0224`) du comptage, images remises à 5 cm par pixel (`outils/preparer_comptage.py`). Résultats : voir [experiences.md](experiences.md).
 
 ## 9. Feuilles de bananier — Pérou (Mendeley Data)
 
@@ -218,14 +207,25 @@ Environ 30 % de mes fausses alertes sur Manuel sont donc des bananiers absents d
 
 ## 11. Images drone — Plants-bana (Roboflow Universe), pour le comptage
 
-- **Provenance** : projet [« Plants-bana »](https://universe.roboflow.com/work-sd4ee/plants-bana) publié sur Roboflow Universe par « Work » (juillet 2024), sans description. Je l'ai trouvé en cherchant d'autres images drone de bananiers mêlés à d'autres arbres, plus proches de ReforesTree que Count banana plants. Pays, date de vol, appareil et auteurs réels : non indiqués. Les noms de fichiers (`CACAU_1_…`, `CACAU_2_…`) sont en portugais : c'est peut-être le Brésil, mais ce n'est qu'une supposition.
+- **Provenance** : projet [« Plants-bana »](https://universe.roboflow.com/work-sd4ee/plants-bana) publié sur Roboflow Universe par « Work » (juillet 2024), sans description. Pays, dates de vol, appareils et auteurs réels : non indiqués.
 - **Licence** : CC BY 4.0.
-- **Version récupérée** : la version 3 publiée contient 7 706 images, parce que chaque image d'entraînement y est copiée 3 fois avec des modifications (miroirs, rotations, zoom, luminosité, bruit), et toutes sont réduites en 640 × 640 px. Ces copies seraient des quasi-doublons. J'ai donc copié le projet dans mon espace Roboflow (02/11/2026) et créé une version sans modification ni réduction : les **2 840 images d'origine**.
-- **Composition** : 2 classes, **Banana** et **Cacao**, annotées par des contours de couronne (polygones). Les images sont des morceaux de 2 grandes images de drone (`CACAU_1` et `CACAU_2`) : d'après les coordonnées dans les noms de fichiers, des carrés de 1 280 px pris tous les 1 024 px, donc qui se chevauchent. Nombre de bananiers et taille du pixel : à vérifier après décompression.
-- **Découpage prévu** : par grande image (`CACAU_1` d'un côté, `CACAU_2` de l'autre), jamais au hasard, à cause du chevauchement des morceaux. Le découpage fourni par Roboflow est fait au hasard : je ne l'utiliserai pas.
-- **Risques de fuite** : morceaux voisins qui se recouvrent ; copies modifiées de la version publiée (évitées en reprenant les images d'origine).
-- **Biais et limites** : 2 parcelles seulement ; taille du pixel inconnue, à estimer avec la taille des couronnes comme pour Count banana plants. Sur les aperçus, presque chaque couronne a son contour : les annotations semblent plus complètes que celles de ReforesTree.
-- **Utilisation** : pas encore utilisé. Prévu pour reprendre le comptage, après le modèle maladies.
+- **Version récupérée** : la version 3 publiée contient 7 706 images, parce que chaque image d'entraînement y est copiée 3 fois avec des modifications et réduite en 640 × 640 px. J'ai copié le projet dans mon espace Roboflow et créé une version sans modification ni réduction : 2 840 images, téléchargées au format COCO le 02/11/2026 (`data/brut/plants_banana/`). Mais ces 2 840 images contiennent **déjà des copies** : beaucoup d'images portent le même nom d'origine et sont des versions tournées ou modifiées de la même photo, ajoutées par les auteurs eux-mêmes. En ne gardant qu'une image par nom d'origine, il reste **802 images distinctes**.
+- **Composition** : ce n'est pas un seul jeu, mais **une compilation de plusieurs sources**, reconnaissables au début des noms de fichiers. J'ai compté les images et les boîtes de chacune (une seule image par nom d'origine), et regardé des exemples :
+
+| Source (nom des fichiers) | Images distinctes (avec copies) | Bananiers annotés | Cacaoyers annotés | Ce que c'est |
+|---|---|---|---|---|
+| `segmento_…` | 90 (230), 640 × 640 px | **16 711** | 0 | morceaux sans recouvrement d'une même grande image drone vue du dessus : bananeraie dense, forêt autour. Bananier médian : 29 px de côté |
+| `100_022…` | 401 (2 227), 256 × 256 px | 4 703 | 0 | **le jeu Count banana plants lui-même** (section 8 : 400 images, 4 672 boîtes), réduit en 256 px ; ses copies sont réparties entre les parties train, valid et test de Roboflow |
+| `corte__…` | 49 (117), 256 × 256 px | 809 | 0 | gros plans de bananeraie, vue du dessus |
+| vidéos (`Vi-deo…`, `WhatsApp…`, `dji_fly…`) | 66 (70) | 2 504 | 0 | images de vidéo filmées **en oblique** : les boîtes entourent les troncs, pas les couronnes |
+| `DJI_…` | 12, 5 472 × 3 648 px | 276 | 762 | photos drone d'une parcelle mélangée, petites boîtes |
+| `CACAU_…`, `cacao…` | 184 | 0 | 5 364 (contours) | parcelles de cacao : **seuls les cacaoyers sont annotés**, les bananiers visibles ne le sont pas |
+
+- **Doublons avec mes autres jeux** : j'ai comparé les empreintes d'image (au plus 6 bits de différence) des images `segmento` et `corte` à celles de Count banana plants : aucune paire.
+- **Découpage** : le découpage fourni par Roboflow est fait au hasard, et mélange les sources : je ne l'utilise pas. Si j'utilise les morceaux `segmento`, je les sépare par zones de la grande image (leurs coordonnées sont dans les noms).
+- **Risques de fuite** : les images `100_022…` sont celles de Count banana plants, y compris ses vols de validation (`100_0223`, `100_0224`) : je ne les utilise pas. Les copies d'une même image doivent rester du même côté du découpage : je n'en garde qu'une.
+- **Biais et limites** : sources très différentes (vue du dessus ou oblique, tailles d'image, échelles) ; images oblique et parcelles `CACAU` inutilisables pour compter les bananiers. Taille du pixel inconnue : je remets chaque source à 5 cm par pixel en supposant que son bananier médian a la même taille que dans ReforesTree. Pour `segmento`, cela donne un pixel d'origine d'environ 10 cm, pour `corte` environ 4,7 cm. C'est une hypothèse, pas une mesure.
+- **Utilisation** : comptage, avec seulement `segmento` et `corte` (`outils/preparer_comptage.py`). `segmento` est coupé en 3 zones éloignées de la grande image : apprentissage = zone de gauche (47 images, 12 039 bananiers), validation = bas droite, côté ouest (17 images, 1 870), test = bas droite côté est et haut (26 images, 2 801). `corte` sert à l'apprentissage (49 images, 809 bananiers). Les autres sources sont écartées (copies de Count banana plants, vues en oblique, bananiers non annotés).
 
 ## Écart entre photos de feuilles et images aériennes
 
