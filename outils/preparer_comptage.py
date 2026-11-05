@@ -9,8 +9,8 @@ Jeux et découpage (vérifiés par outils/verifier_doublons_comptage.py) :
     les bananiers ne sont pas tous annotés). Apprentissage : Flora, Leonor, Guevara, Arteaga ;
     validation : Manuel ; test : Nestor ;
   - Count banana plants (v15) : apprentissage = vols 100_0221 et 100_0222, validation = 100_0223 et 100_0224 ;
-  - Plants-bana : seulement les sources `segmento` (grande image drone, découpée en 3 zones éloignées :
-    apprentissage, validation, test) et `corte` (apprentissage), une seule image par nom d'origine.
+  - Plants-bana : seulement les sources `segmento` (grande image drone, découpée en 3 zones : apprentissage
+    à gauche, loin des autres ; validation et test côte à côte en bas à droite ; test aussi en haut) et `corte` (apprentissage), une seule image par nom d'origine.
     Les autres sources sont écartées (copies de Count banana, vues en oblique, bananiers non annotés).
 
 Sorties dans <sortie>/ :
@@ -46,7 +46,8 @@ PLANTS = 'brut/plants_banana/Plants-bana.v1i.coco'
 
 
 def zone_segmento(x, y):
-    # Coordonnées du morceau dans la grande image (en pixels de 640). Trois groupes éloignés l'un de l'autre :
+    # Coordonnées du morceau dans la grande image (en pixels de 640). L'apprentissage est loin des autres zones ;
+    # la validation et le test du bas se touchent (colonnes 27 et 28, voir docs/experiences.md, protocole du test) :
     # à gauche (47 morceaux) apprentissage ; en bas à droite, colonnes 22 à 27 validation, 28 à 35 test ;
     # en haut (8 morceaux isolés) test.
     c, r = (x - 11520) // 640, (y - 11520) // 640

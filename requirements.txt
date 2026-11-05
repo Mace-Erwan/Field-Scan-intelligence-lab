@@ -1,6 +1,10 @@
 numpy
-tifffile
-rasterio
-geopandas
-Pillow
+pandas
 scipy
+rasterio
+geopandas>=1.0
+shapely>=2
+Pillow
+tifffile
+torch
+torchvision
