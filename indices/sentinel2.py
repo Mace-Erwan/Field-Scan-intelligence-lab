@@ -2,11 +2,14 @@
 
 Les fichiers sont ceux exportés du Copernicus Browser (réflectance, 32 bits). Les pixels de nuage,
 d'ombre de nuage, de cirrus ou sans donnée sont repérés grâce à la carte de classification de scène
-(SCL), exportée en couleurs, et exclus.
+(SCL), et exclus. La SCL peut être exportée en couleurs (3 bandes) ou brute (1 bande, numéro de classe) ;
+elle est lue sur la grille de la bande B04 (une SCL brute est à 20 m).
 """
 
 import numpy as np
 import rasterio
+from rasterio.enums import Resampling
+from rasterio.vrt import WarpedVRT
 
 # Indices normalisés : nom -> (bande a, bande b), indice = (a - b) / (a + b)
 INDICES = {
@@ -19,6 +22,8 @@ INDICES = {
 COULEURS_A_EXCLURE = {
     (0.467, 0.298, 0.043), (0.753, 0.753, 0.753), (1.0, 1.0, 1.0), (0.392, 0.784, 1.0), (0.0, 0.0, 0.0),
 }
+# Les mêmes classes dans une SCL brute : 0 sans donnée, 3 ombre de nuage, 8 nuage moyen, 9 nuage fort, 10 cirrus
+CLASSES_A_EXCLURE = {0, 3, 8, 9, 10}
 
 
 def indice_normalise(a, b):
@@ -34,7 +39,7 @@ def lire_date(bandes):
     if "B04" not in bandes:
         raise FileNotFoundError("bande B04 absente")
     with rasterio.open(bandes["B04"]) as src:
-        profil, forme = src.profile.copy(), src.shape
+        profil, forme, grille = src.profile.copy(), src.shape, (src.crs, src.transform)
     lues = {}
     for nom, chemin in bandes.items():
         if nom == "SCL":
@@ -45,10 +50,15 @@ def lire_date(bandes):
             lues[nom] = src.read(1).astype("float32")
     exclus = np.zeros(forme, bool)
     if "SCL" in bandes:
-        with rasterio.open(bandes["SCL"]) as src:
-            scl = np.round(src.read().astype("float32"), 3)
-        for r, v, b in COULEURS_A_EXCLURE:
-            exclus |= (scl[0] == r) & (scl[1] == v) & (scl[2] == b)
+        with rasterio.open(bandes["SCL"]) as src, WarpedVRT(src, crs=grille[0], transform=grille[1], width=forme[1],
+                                                            height=forme[0], resampling=Resampling.nearest) as vrt:
+            scl = vrt.read().astype("float32")
+        if scl.shape[0] >= 3:                                   # SCL en couleurs
+            scl = np.round(scl, 3)
+            for r, v, b in COULEURS_A_EXCLURE:
+                exclus |= (scl[0] == r) & (scl[1] == v) & (scl[2] == b)
+        else:                                                   # SCL brute : un numéro de classe par pixel
+            exclus |= np.isin(scl[0], list(CLASSES_A_EXCLURE))
     indices = {}
     for nom, (a, b) in INDICES.items():
         if a in lues and b in lues:

@@ -46,7 +46,7 @@ Toutes les cartes s'ouvrent dans QGIS.
 
 ## Comment le bulletin est calculé
 
-- **Comptage** : détecteur de centres (ResNet-18 + décodeur), moyenne de 2 modèles sur 4 vues, image remise à 5 cm par pixel, un point par pied. Le seuil (0,30) équilibre fausses alertes et oublis, pour que le nombre de pieds par parcelle soit juste. Détail et résultats : `docs/experiences.md`, section 1.
+- **Comptage** : détecteur de centres (ResNet-18 + décodeur), moyenne de 2 modèles sur 4 vues, image remise à 5 cm par pixel, un point par pied. Le seuil (0,25) équilibre fausses alertes et oublis, pour que le nombre de pieds par parcelle soit juste. Détail et résultats : `docs/experiences.md`, section 1.
 - **Vigueur** : une zone est faible quand son indice (NDVI, ou part de végétation pour une image drone RGB) est sous 80 % du niveau normal de la plantation (75e centile).
 - **Eau** : une zone manque probablement d'eau quand son NDMI est plus bas de plus de 0,05 que ce qu'on attend pour sa quantité de feuillage. Avec deux dates, une parcelle est signalée si son NDMI baisse de plus de 0,05 de plus que les autres entre la saison humide et la saison sèche.
 - **Maladies** : moyenne de 3 ConvNeXt-Tiny sur 4 vues ; malade si P(Black Sigatoka) + P(Fusarium) ≥ 0,30 ; « je ne sais pas » si la confiance est sous 0,646. Détail : `docs/experiences.md`, section 2.
@@ -54,7 +54,7 @@ Toutes les cartes s'ouvrent dans QGIS.
 
 ## Ce que le système sait faire, et ses limites
 
-- **Comptage** : bananeraies et fermes mélangées vues du dessus, à n'importe quelle résolution entre 2 et 20 cm par pixel. F1 d'environ 0,80 sur des plantations du type appris, d'environ 0,72 sur un type jamais vu. Sur de jeunes plants, il en oublie à peu près un sur trois. Un rejet collé à sa mère n'est pas compté à part.
+- **Comptage** : bananeraies et fermes mélangées vues du dessus, à n'importe quelle résolution entre 2 et 20 cm par pixel. F1 d'environ 0,80 sur des plantations du type appris, d'environ 0,76 sur un type jamais vu (`outils/evaluer_comptage.py`). Sur de jeunes plants, il en oublie à peu près un sur trois. Un rejet collé à sa mère n'est pas compté à part.
 - **Maladies** : photos de feuilles prises au sol, de près (pas les images drone). La cercosporiose est reconnue dans un autre pays (Bangladesh : 95 %). La fusariose n'a été vue qu'en Tanzanie. Une maladie inconnue est signalée malade, mais rarement en « je ne sais pas ».
 - **Vigueur et stress** : jugés par rapport au reste de la plantation analysée, pas avec des seuils fixes. Sur une ferme mélangée vue par un drone RGB, la vigueur n'est pas calibrée.
 - **Temps de calcul** (processeur à 2 cœurs, sans GPU) : environ 1 min 40 par hectare d'image drone pour le comptage, environ 1 s par photo de feuille.

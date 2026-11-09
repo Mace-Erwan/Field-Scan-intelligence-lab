@@ -46,10 +46,12 @@ def _en_8_bits(rgb, valide):
 
 def compter(chemin, parcelles, reseaux):
     """Pieds trouvés dans les parcelles couvertes par l'image : GeoDataFrame en EPSG:4326
-    (colonnes id_parcelle, score, image), et la surface traitée en hectares."""
+    (colonnes id_parcelle, score, image), et {id de parcelle: surface couverte en hectares}.
+    La surface couverte ne compte que les pixels qui ont une donnée : une orthomosaïque a souvent des
+    bords sans image (transparents ou noirs) à l'intérieur de son rectangle."""
     utm = parcelles.estimate_utm_crs()
     p_utm = parcelles.to_crs(utm)
-    pieds, surface_ha, debut = [], 0.0, time.time()
+    pieds, surfaces, debut = [], {}, time.time()
     with rasterio.open(chemin) as src:
         bandes = _bandes_rgb(src)
         emprise = box(*transform_bounds(src.crs, utm, *src.bounds))
@@ -68,7 +70,7 @@ def compter(chemin, parcelles, reseaux):
                 rgb = vrt.read(bandes)
                 valide = vrt.read_masks(1) > 0
             dans = geometry_mask([zone], out_shape=(hauteur, largeur), transform=t, invert=True)
-            valide &= dans
+            valide &= dans & (rgb.sum(0) > 0)                  # un pixel tout noir est un pixel sans image
             image = _en_8_bits(rgb, valide).transpose(1, 2, 0) * valide[..., None]
             xy, scores = detecteur.detecter(reseaux, np.ascontiguousarray(image))
             for (x, y), s in zip(xy, scores):
@@ -76,10 +78,13 @@ def compter(chemin, parcelles, reseaux):
                 if zone.contains(Point(X, Y)):
                     pieds.append({"id_parcelle": parcelle["id"], "score": round(float(s), 3),
                                   "image": chemin.name, "geometry": Point(X, Y)})
-            surface_ha += zone.area / 1e4
+            ha = float(valide.sum()) * detecteur.PIXEL_M ** 2 / 1e4
+            if ha > 0:
+                surfaces[parcelle["id"]] = surfaces.get(parcelle["id"], 0.0) + ha
     duree = time.time() - debut
+    surface_ha = sum(surfaces.values())
     if surface_ha:
         print(f"    {chemin.name} : {len(pieds)} pieds sur {surface_ha:.2f} ha, "
               f"{duree:.0f} s ({duree / surface_ha:.0f} s par hectare)")
     gdf = gpd.GeoDataFrame(pieds, columns=["id_parcelle", "score", "image", "geometry"], geometry="geometry", crs=utm)
-    return gdf.to_crs("EPSG:4326"), surface_ha
+    return gdf.to_crs("EPSG:4326"), surfaces

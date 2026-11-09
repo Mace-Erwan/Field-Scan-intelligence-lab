@@ -210,7 +210,7 @@ Un seul lancement (environ 3 h sur une T4) pour vérifier le détecteur de centr
 
 **Réentraînement final** (`entrainement/comptage_v2_final_kaggle.ipynb`). Une fois tous les choix figés sur la validation, je réentraîne les 2 modèles avec la même recette sur apprentissage + validation : une 5e ferme ReforesTree, les 4 vols de Count banana, deux zones de `segmento`. Le manque de types de plantation étant la principale limite, je préfère montrer au modèle livré le plus de données possible. Décidé avant de voir le test : c'est lui le modèle final.
 
-**Garde-fou.** Noté sur ses 518 images apprises, le modèle réentraîné fait 0,901, contre 0,903 pour le modèle de validation. Pris à la lettre (« au moins aussi bien »), le garde-fou échoue de 0,002. L'entraînement n'a pourtant pas raté : sur la validation, qu'il a apprise, il passe de 0,803 à 0,864, et l'écart est dix fois plus petit que la variation due au hasard d'un entraînement. Le garde-fou oubliait un détail : en apprenant plus d'images avec le même nombre de pas, le modèle revoit moins souvent chacune. Pour trancher sans deviner, j'ai noté les deux modèles sur deux plantations qu'aucun des deux n'a vues (plus bas), avec une règle fixée avant : garder le modèle réentraîné, sauf si l'autre fait mieux d'au moins 0,01. Résultat : 0,725 contre 0,727. **Je garde le modèle réentraîné**, en 16 bits (0,8643 contre 0,8642 en 32 bits).
+**Garde-fou.** Noté sur ses 518 images apprises, le modèle réentraîné fait 0,901, contre 0,903 pour le modèle de validation. Pris à la lettre (« au moins aussi bien »), le garde-fou échoue de 0,002. L'entraînement n'a pourtant pas raté : sur la validation, qu'il a apprise, il passe de 0,803 à 0,864, et l'écart est dix fois plus petit que la variation due au hasard d'un entraînement. Le garde-fou oubliait un détail : en apprenant plus d'images avec le même nombre de pas, le modèle revoit moins souvent chacune. Pour trancher sans deviner, j'ai noté les deux modèles sur deux plantations qu'aucun des deux n'a vues (plus bas), avec une règle fixée avant : garder le modèle réentraîné, sauf si l'autre fait mieux d'au moins 0,01. Résultat : 0,761 contre 0,737 (0,725 contre 0,727 avec la première préparation de Plantain, voir « Plantations jamais vues » ; la décision est la même). **Je garde le modèle réentraîné**, en 16 bits (0,8643 contre 0,8642 en 32 bits).
 
 #### Le seuil : équilibrer fausses alertes et oublis
 
@@ -241,14 +241,16 @@ Pour savoir ce que vaut le modèle sur un type de plantation qu'il n'a jamais ap
 
 | Jeu jamais vu (seuil 0,25) | Modèle réentraîné | Modèle de validation |
 |---|---|---|
-| Detecting Plantain Crops (19 images, 208 plantains) | 0,670 (compte +17 %) | 0,673 (+13 %) |
-| Banano Finca (25 images, 409 plants) | 0,779 (compte −24 %) | 0,781 (−27 %) |
-| **Moyenne** | **0,725** | **0,727** |
+| Detecting Plantain Crops (19 images, 208 plantains) | 0,741 (compte +4 %) | 0,692 (−8 %) |
+| Banano Finca (25 images, 409 plants) | 0,780 (compte −24 %) | 0,781 (−27 %) |
+| **Moyenne** | **0,761** | **0,737** |
+
+Ces chiffres sont calculés par `outils/evaluer_comptage.py`, qui prépare les deux jeux comme le décrit le carnet (section 12) et enregistre toutes les détections. Une première notation, faite avec une préparation de Plantain que je n'ai pas conservée, donnait 0,670 et 0,673 sur Plantain (moyennes 0,725 et 0,727) ; Banano Finca était identique. Je garde les chiffres du script, que l'on peut relancer.
 
 ![Comptage : plantations jamais vues](images/comptage_plantations_inconnues.jpg)
 *Modèle réentraîné sur une image de chaque jeu. Cercle vert : détection juste ; croix orange : fausse alerte ; cercle rouge : plant annoté raté.*
 
-Sur un type de plantation jamais vu, la F1 tombe vers 0,72, contre 0,80 sur la validation. Sur les jeunes plants, le modèle en oublie environ un sur trois. Ces deux jeux sont petits et viennent chacun d'une seule scène : leur F1 est imprécise à quelques points près.
+Sur un type de plantation jamais vu, la F1 tombe vers 0,74 à 0,76, contre 0,80 sur la validation. Sur les jeunes plants, le modèle en oublie environ un sur trois. Ces deux jeux sont petits et viennent chacun d'une seule scène : leur F1 est imprécise à quelques points près.
 
 #### Deux idées écartées : choix automatique du zoom et AdaBN
 
@@ -264,9 +266,9 @@ Règle fixée avant : une idée est gardée si elle gagne au moins 0,01 sur les 
 | zoom automatique | 0,698 | 0,765 | 0,732 | `segmento` −0,027 |
 | AdaBN | 0,593 | 0,589 | 0,591 | −0,07 à −0,10 sur chaque jeu |
 
-**Les deux sont écartées.** La confiance du modèle ne désigne pas le bon zoom, et recalculer la normalisation sur quelques images d'une seule scène abîme nettement le modèle.
+**Les deux sont écartées.** La confiance du modèle ne désigne pas le bon zoom, et recalculer la normalisation sur quelques images d'une seule scène abîme nettement le modèle. Ces chiffres viennent de la première préparation de Plantain (voir plus haut) ; la décision n'en dépend pas, puisque les deux idées font perdre plus de 0,02 sur un jeu de validation.
 
-#### Dernier essai : nouveaux jeux de jeunes plantations (en cours)
+#### Dernier essai : nouveaux jeux de jeunes plantations (05/11/2026)
 
 Puisque le modèle rate surtout les plantations qu'il n'a jamais vues, le seul vrai remède est de lui en montrer. J'ajoute trois jeux Roboflow, à l'apprentissage seulement (carnet, section 13) : des jeunes plants en rangs, du plantain et une autre jeune plantation. Règles fixées avant l'essai :
 - même recette, 2 graines ; les nouveaux jeux font 30 % des morceaux, les anciens gardent leurs proportions entre eux ;
@@ -274,9 +276,76 @@ Puisque le modèle rate surtout les plantations qu'il n'a jamais vues, le seul v
 - gardé si la F1 moyenne sur les deux plantations jamais vues gagne au moins 0,01, sans perte de plus de 0,02 sur un jeu de validation ;
 - si c'est gardé : réentraînement final avec tout. Le garde-fou est corrigé : sur les images apprises, le modèle final doit faire au moins aussi bien que le modèle d'essai, à 0,02 près.
 
+**Résultat** (essai : `entrainement/comptage_v3_essai_kaggle.ipynb` ; notation sur CPU : `outils/evaluer_comptage.py`, chaque modèle à son seuil d'équilibre, détections et scores enregistrés) :
+
+| | Modèle actuel (seuil 0,30) | Avec les nouveaux jeux (seuil 0,25) | Écart |
+|---|---|---|---|
+| Detecting Plantain Crops | 0,684 | **0,771** | +0,087 |
+| Banano Finca | 0,745 | 0,750 | +0,005 |
+| **Moyenne des plantations jamais vues** | 0,715 | **0,761** | **+0,046** |
+| Manuel | 0,765 | 0,780 | +0,015 |
+| Count banana | 0,880 | 0,860 | −0,020 |
+| `segmento` | 0,754 | 0,758 | +0,004 |
+| F1 moyenne de validation | 0,800 | 0,800 | 0 |
+
+- **La règle garde les nouveaux jeux** : +0,046 sur les plantations jamais vues, et aucun jeu de validation ne perd plus de 0,02. Count banana est juste à la limite (−0,0199) ;
+- le gain vient du plantain, un type que le modèle a maintenant appris. Sur les jeunes plants de Banano Finca, presque rien ne change : il en oublie toujours plus d'un sur trois (rappel 0,63). Les jeunes plantations restent le point faible ;
+- avec les nouveaux jeux, le seuil d'équilibre descend à 0,25 (à 0,30, la F1 moyenne de validation perd 0,0053, plus que les 0,005 permis) ;
+- **le comptage n'évolue pas dans le même sens partout.** Sur la validation, le nouveau modèle compte plus mal : −1,5 %, +18,8 % et +13,9 %, soit 11,4 % d'erreur moyenne contre 5,0 % pour le modèle actuel. Sur les plantations jamais vues, il compte mieux : −6,7 % et −32,5 %, soit 19,6 % contre 26,0 %. La règle ne regarde que la F1 ; c'est un coût à surveiller au test ;
+- **vérifications après coup**, pour voir si le gain tient au seuil, au hasard ou à l'échelle supposée du plantain :
+    - à seuil égal (0,25 pour les deux, le seuil de meilleure F1 du modèle actuel), l'ancien modèle fait un peu mieux sur la validation (0,803 contre 0,800), et le gain sur les plantations jamais vues tombe à +0,024 ;
+    - en tirant les images au hasard (5 000 tirages avec remise, par image), le gain moyen reste positif dans plus de 99,9 % des tirages (intervalle à 95 % : +0,017 à +0,077). Il est porté par le plantain (+0,036 à +0,145) ; sur Banano Finca, l'écart ne se distingue pas de zéro (−0,021 à +0,031) ;
+    - la taille du pixel du plantain est inconnue. Avec des plants supposés 0,7 à 1,4 fois plus grands qu'estimé (option `--facteur-plantain`), le nouveau modèle reste devant sur le plantain à chaque fois, de +0,05 à +0,09, et la règle le garde à chaque fois (gain moyen sur les deux juges de +0,026 à +0,046) : la décision ne dépend pas de cette hypothèse ;
+- **une première notation** de cet essai, faite avec une préparation de Plantain que je n'ai pas conservée, donnait 0,686 contre 0,745 sur Plantain (+0,032 en moyenne). La validation et Banano Finca sont identiques ; seul Plantain change, parce que son échelle doit être supposée. Les deux notations gardent les nouveaux jeux ; je garde les chiffres du script, que l'on peut relancer ;
+- en résumé : le nouveau modèle n'est pas meilleur sur les types qu'il connaissait déjà. Il est meilleur sur le plantain, qu'il ne connaissait pas.
+
+Fichiers : poids de l'essai et tableaux du notebook dans `C:\Field_scan\modeles\comptage_v3_essai\`, notation (détections, scores, bilans, un dossier par facteur d'échelle) dans `evaluation_juges\`.
+
+**Le seuil vu sur toutes les plantations** (analyse après coup ; elle ne change aucune décision). La règle d'équilibre choisit le seuil sur la validation, donc sur des plantations du type appris. Or le test de l'organisation mélangera des types de plantations, et ce qui compte au comptage, c'est que fausses alertes et oublis s'équilibrent sur l'ensemble. J'ai donc regardé l'erreur de comptage selon le seuil sur les 5 jeux à la fois (`evaluation_juges\facteur_1.0\scores.csv`) :
+
+| Nouveau modèle, seuil | F1 validation | F1 plantations jamais vues | Compte : Manuel / Count banana / `segmento` | Compte : Plantain / Banano Finca | Erreur de compte moyenne sur les 5 jeux |
+|---|---|---|---|---|---|
+| 0,20 | 0,781 | 0,771 | +10 % / +30 % / +35 % | +18 % / −23 % | 23,2 % |
+| **0,25** | **0,799** | **0,761** | −2 % / +19 % / +14 % | −7 % / −33 % | **14,7 %** |
+| 0,30 | 0,794 | 0,724 | −8 % / +8 % / −5 % | −21 % / −42 % | 16,8 % |
+| 0,35 | 0,779 | 0,665 | −17 % / −1 % / −22 % | −34 % / −51 % | 25,2 % |
+
+- sur les plantations du type appris, 0,25 compte trop (+19 % sur Count banana) : sur la validation seule, 0,30 compterait mieux ;
+- sur les plantations jamais vues, c'est l'inverse : le modèle oublie des plants, surtout les jeunes (−33 % sur Banano Finca), et monter le seuil aggrave ces oublis tout en faisant baisser la F1 ;
+- sur les 5 jeux ensemble, 0,25 est le seuil le plus équilibré. C'est aussi vrai pour le modèle actuel : 12,2 % d'erreur moyenne à 0,25, contre 13,4 % à 0,30 et 15,6 % à 0,20 ;
+- un coefficient de correction du nombre de pieds ne corrigerait pas les deux défauts à la fois, puisque le modèle compte trop dans les plantations adultes denses et pas assez dans les jeunes. Il faudrait d'abord reconnaître le type de plantation. Je ne le fais pas : je le garde comme perspective.
+
+#### Essai v4 : deux bananeraies de plus (règles fixées avant l'essai, 05/11/2026)
+
+Les nouveaux jeux de la v3 ont aidé sur le plantain, pas sur les jeunes bananiers de Banano Finca. J'ajoute deux jeux de bananeraies vues par drone (carnet, section 14) : `banavista` (photos et orthomosaïques de plantations des Philippines, jeunes et adultes) et `jorges` (orthomosaïque d'une jeune bananeraie). Règles fixées avant l'essai :
+- même recette que l'essai v3, 2 graines (`entrainement/comptage_v4_essai_kaggle.ipynb`) ; `banavista` fait 15 % des morceaux et `jorges` 5 %, les parts des jeux de la v3 sont multipliées par 0,8 ;
+- comparaison avec l'essai v3 (déjà entraîné), chacun à son seuil d'équilibre, notation par `outils/evaluer_comptage.py` ;
+- gardé si la F1 moyenne sur les deux plantations jamais vues gagne au moins 0,01, sans perte de plus de 0,02 sur un jeu de validation ;
+- si c'est gardé : réentraînement final v4 (`comptage_v4_final_kaggle.ipynb`) ; sinon : réentraînement final v3. Même garde-fou que pour la v3 ;
+- c'est la troisième décision prise avec les deux mêmes juges : plus on choisit en les regardant, moins ils imitent une plantation vraiment inconnue. Après cet essai, le comptage est figé, quel que soit le résultat.
+
+**Résultat** (notation par `outils/evaluer_comptage.py`, chacun à son seuil d'équilibre ; poids, tableaux du notebook et notation dans `C:\Field_scan\modeles\comptage_v4_essai\`) :
+
+| | Essai v3 (seuil 0,25) | Essai v4 (seuil 0,30) | Écart |
+|---|---|---|---|
+| Detecting Plantain Crops | **0,771** | 0,636 | −0,135 |
+| Banano Finca | 0,750 | 0,763 | +0,013 |
+| **Moyenne des plantations jamais vues** | **0,761** | 0,699 | **−0,062** |
+| Manuel | 0,780 | 0,797 | +0,017 |
+| Count banana | 0,860 | 0,885 | +0,025 |
+| `segmento` | 0,758 | 0,762 | +0,004 |
+| F1 moyenne de validation | 0,799 | **0,815** | +0,016 |
+| Erreur de compte moyenne sur les 5 jeux | **14,7 %** | 18,8 % | |
+
+- **La règle ne garde pas l'essai v4** : −0,062 sur les plantations jamais vues, alors qu'il fallait au moins +0,01. En tirant les images au hasard (5 000 tirages), l'écart moyen est négatif dans tous les tirages (−0,096 à −0,022) ;
+- v4 est meilleur sur la validation (+0,016), c'est-à-dire sur les types de plantation déjà appris, et un peu meilleur sur les jeunes bananiers de Banano Finca (rappel 0,66 contre 0,63). Mais il perd beaucoup sur le plantain (−0,135) : à son seuil d'équilibre (0,30), il en oublie près de la moitié (compte −46 %). Même au seuil de 0,25, il resterait sous v3 sur les plantations jamais vues (0,752 contre 0,761) ;
+- explication probable, que je n'ai pas vérifiée : les deux jeux ajoutés sont des bananeraies, et le plantain ne fait plus que 9,6 % des morceaux (12 % en v3). Le modèle reconnaît mieux les couronnes de bananier, moins bien les jeunes plantains épars ;
+- sur ses propres images d'apprentissage, l'essai v4 fait 0,83 sur `banavista` et 0,81 sur `jorges` : ces jeux sont bien appris. `jeunes_lasuiza` reste mal appris (0,67 à 0,71), comme en v3 ;
+- comme prévu par la règle, le modèle livré sera le réentraînement final de la v3 (`comptage_v3_final_kaggle.ipynb`), au seuil de 0,25, et le comptage est figé. Les jeux `banavista` et `jorges` restent décrits dans le carnet (section 14), mais le modèle livré ne les utilise pas.
+
 #### Protocole du test, fixé avant de le lancer (05/11/2026)
 
-- **modèle** : le modèle final (moyenne des 2 modèles, 4 vues, 16 bits), au seuil donné par la règle d'équilibre (0,30 aujourd'hui) ;
+- **modèle** : le modèle final (moyenne des 2 modèles, 4 vues, 16 bits), au seuil donné par la règle d'équilibre. Le modèle final apprend la validation et ne peut donc plus y choisir son seuil : il prend celui de son essai, 0,25 avec les nouveaux jeux (comme le modèle final précédent prenait 0,30, le seuil du modèle de validation) ;
 - **`segmento`** : la zone de validation et la zone de test du bas se touchent. Les 4 morceaux de test qui bordent la validation (303 bananiers) sont retirés : un bananier coupé par ce bord aurait été vu à moitié pendant l'apprentissage. Il reste 22 morceaux et 2 498 bananiers ;
 - **jeunes bananiers** (3 photos drone, carnet section 11) : seuls les plants à moins de 2 000 px du centre de chaque photo comptent ; photos remises à 5 cm à partir de leur échelle estimée (environ 1,1 cm par pixel). Je note les mères seules et tous les plants, photo par photo. Je compare 0544, annotée entièrement à la main, à 0546 et 0548, pré-annotées puis corrigées ;
 - **rejets** : je compte les rejets annotés qui reçoivent leur propre détection, c'est-à-dire comptés comme un pied de plus ;

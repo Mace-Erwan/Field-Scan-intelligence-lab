@@ -67,15 +67,10 @@ def partie_comptage(images_drone, parcelles, mesures, sortie):
     print(f"Comptage : {len(reseaux)} modèles, {len(images_drone)} image(s) drone")
     tous, couvert = [], {}
     for im in images_drone:
-        gdf, _ = pieds.compter(im["chemin"], parcelles, reseaux)
+        gdf, surfaces = pieds.compter(im["chemin"], parcelles, reseaux)
         tous.append(gdf)
-        utm = parcelles.estimate_utm_crs()
-        with rasterio.open(im["chemin"]) as src:
-            from rasterio.warp import transform_bounds
-            from shapely.geometry import box
-            emprise = box(*transform_bounds(src.crs, utm, *src.bounds))
-        for _, p in parcelles.to_crs(utm).iterrows():
-            couvert[p["id"]] = couvert.get(p["id"], 0) + p.geometry.intersection(emprise).area / 1e4
+        for i, ha in surfaces.items():                 # surface réellement couverte par des pixels d'image
+            couvert[i] = couvert.get(i, 0) + ha
     pieds_gdf = pd.concat(tous, ignore_index=True) if tous else gpd.GeoDataFrame(columns=["id_parcelle", "score", "image", "geometry"])
     pieds_gdf = gpd.GeoDataFrame(pieds_gdf, geometry="geometry", crs="EPSG:4326")
     pieds_gdf.to_file(sortie / "pieds.geojson", driver="GeoJSON")

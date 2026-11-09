@@ -17,7 +17,7 @@ import torch.nn.functional as F
 from torchvision import models
 
 PIXEL_M = 0.05          # taille d'un pixel attendue par le modèle (m)
-SEUIL = 0.30            # équilibre fausses alertes / oublis sur la validation (docs/experiences.md)
+SEUIL = 0.25            # équilibre fausses alertes / oublis, choisi sur la validation de l'essai v3 (docs/experiences.md)
 FENETRE_PIC = 7         # 7 x 7 cases de 20 cm = 1,4 m
 TUILE = 2048            # les grandes images sont traitées par morceaux de 2048 px...
 MARGE = 128             # ... qui se recouvrent de 2 x 128 px, pour éviter les effets de bord
@@ -52,6 +52,8 @@ class DetecteurCentres(nn.Module):
 
 def charger(chemins):
     """Charge les réseaux ; les poids enregistrés en 16 bits sont remis en 32 bits pour le calcul sur CPU."""
+    if not chemins:
+        raise FileNotFoundError("Aucun fichier de poids du comptage (.pt) : ils doivent être dans modeles/comptage/")
     reseaux = []
     for chemin in chemins:
         poids = torch.load(chemin, map_location="cpu", weights_only=True)
