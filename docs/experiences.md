@@ -5,7 +5,7 @@ Mis à jour le 10/11/2026. Les données sont décrites dans le [carnet de donné
 ## Où j'en suis
 
 - **Comptage** : palm3, installé le 10/11. C'est un détecteur de centres (ResNet-18) : 2 réseaux, 4 vues, seuil 0,25. Au test du 10/11, sa F1 va de 0,767 à 0,778 sur trois types de plantation.
-- **Maladies** : la v2 est installée (3 ConvNeXt-Tiny, 224 px). La v10b (ConvNeXt-Tiny aux poids DINOv3, 4 classes) est prête mais pas installée. Au test neuf, elle laisse 12,0 % des feuilles malades sans alerte, contre 21,3 % pour la v2, mais elle nomme moins souvent la maladie.
+- **Maladies** : la v10b (ConvNeXt-Tiny aux poids DINOv3, 4 classes, lue en 384 px), avec la règle B, est installée depuis le 11/11 à la place de la v2. Au test neuf, elle laisse 12,0 % des feuilles malades sans alerte, contre 21,3 % pour la v2, mais elle nomme moins souvent la maladie. Sur BanSpot (Inde), elle rate 0,93 % des feuilles tachées, contre 3,56 % pour la v2, pour 10,2 % de fausses alertes contre 5,1 %. La règle écrite avant BanSpot gardait la v2, parce qu'elle n'acceptait que 3 points de fausses alertes en plus. Je l'ai installée quand même, en connaissant ce verdict : rater une feuille malade est plus grave qu'une fausse alerte.
 - **Vigueur et stress hydrique** : indices Sentinel-2 et règles simples, sans apprentissage.
 
 ## Comment je note

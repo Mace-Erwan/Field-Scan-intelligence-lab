@@ -24,7 +24,7 @@ python run.py --images DOSSIER --parcelles parcelles.geojson --out resultats/
 
 - **des images drone** géoréférencées (GeoTIFF RGB, pixel de moins de 1 m) : comptage des pieds, et vigueur (ExG, VARI) s'il n'y a pas d'image Sentinel-2 ;
 - **des bandes Sentinel-2** exportées du Copernicus Browser (un fichier par bande, avec la date et le nom de la bande dans le nom du fichier, par exemple `2025-12-16-00_00_..._B04_(Raw).tiff`, plus la carte `Scene_classification_map`), pour une ou deux dates : vigueur (NDVI, NDRE) et stress hydrique (NDMI, et comparaison des deux saisons) ;
-- **un dossier `feuilles`** avec des photos de feuilles de bananier : maladies (saine, cercosporiose (Sigatoka), fusariose à confirmer par une coupe du pseudo-tronc, ou « je ne sais pas »). Une photo qui a une position GPS est rattachée à sa parcelle.
+- **un dossier `feuilles`** avec des photos de feuilles de bananier : maladies (saine, cercosporiose (Sigatoka), fusariose à confirmer par une coupe du pseudo-tronc, maladie non identifiée, ou « je ne sais pas »). Une photo qui a une position GPS est rattachée à sa parcelle.
 
 Chaque partie ne tourne que si ses images sont présentes. `parcelles.geojson` contient les polygones des parcelles (une colonne `id`, créée si elle manque).
 
@@ -49,15 +49,15 @@ Toutes les cartes s'ouvrent dans QGIS.
 - **Comptage** : détecteur de centres (ResNet-18 + décodeur), moyenne de 2 modèles sur 4 vues, image remise à 5 cm par pixel, un point par pied. Le seuil (0,25) équilibre fausses alertes et oublis, pour que le nombre de pieds par parcelle soit juste. Détail et résultats : `docs/experiences.md`, section 1.
 - **Vigueur** : une zone est faible quand son indice (NDVI, ou part de végétation pour une image drone RGB) est sous 80 % du niveau normal de la plantation (75e centile).
 - **Eau** : une zone manque probablement d'eau quand son NDMI est plus bas de plus de 0,05 que ce qu'on attend pour sa quantité de feuillage. Avec deux dates, une parcelle est signalée si son NDMI baisse de plus de 0,05 de plus que les autres entre la saison humide et la saison sèche.
-- **Maladies** : moyenne de 3 ConvNeXt-Tiny sur 4 vues ; malade si P(Black Sigatoka) + P(Fusarium) ≥ 0,30 ; « je ne sais pas » si la confiance est sous 0,646. Détail : `docs/experiences.md`, section 2.
+- **Maladies** : moyenne de 3 ConvNeXt-Tiny aux poids DINOv3, photo lue en 384 px, sur 4 vues, avec 4 classes (saine, cercosporiose, fusariose, autre). Malade si 1 − P(saine) ≥ 0,725. Une feuille n'est dite saine que si P(saine) atteint 0,519 ; sinon c'est « je ne sais pas », qui donne une alerte. Un « je ne sais pas » avec 1 − P(saine) ≥ 0,675 devient « maladie non identifiée ». Détail : `docs/experiences.md`, section 2.
 - **Score de santé** : moyenne des notes disponibles (vigueur, eau, maladies), chacune sur 100 = part de la parcelle (ou des feuilles) sans problème. Une note sous 70 déclenche une alerte.
 
 ## Ce que le système sait faire, et ses limites
 
 - **Comptage** : bananeraies et fermes mélangées vues du dessus, à n'importe quelle résolution entre 2 et 20 cm par pixel. F1 d'environ 0,80 sur des plantations du type appris, d'environ 0,76 sur un type jamais vu (`outils/evaluer_comptage.py`). Sur de jeunes plants, il en oublie à peu près un sur trois. Un rejet collé à sa mère n'est pas compté à part.
-- **Maladies** : photos de feuilles prises au sol, de près (pas les images drone). La cercosporiose est reconnue dans un autre pays (Bangladesh : 95 %). La fusariose n'a été vue qu'en Tanzanie. Une maladie inconnue est signalée malade, mais rarement en « je ne sais pas ».
+- **Maladies** : photos de feuilles prises au sol, de près (pas les images drone). Sur deux jeux jamais vus, peu de feuilles malades passent : 0,9 % des feuilles tachées sont dites saines sur BanSpot (Inde), et 3,6 % au test neuf (Bangladesh). En échange, environ 10 % des feuilles sans Sigatoka de BanSpot reçoivent une alerte, le plus souvent des feuilles tachées, trouées ou déchirées. Le modèle nomme moins souvent la maladie qu'avant et répond plus souvent « maladie non identifiée » : au test neuf, il nomme la cercosporiose sur 30 % des feuilles atteintes et la fusariose sur 47 %. Une Sigatoka légère sur une feuille entière lui échappe encore souvent.
 - **Vigueur et stress** : jugés par rapport au reste de la plantation analysée, pas avec des seuils fixes. Sur une ferme mélangée vue par un drone RGB, la vigueur n'est pas calibrée.
-- **Temps de calcul** (processeur à 2 cœurs, sans GPU) : environ 1 min 40 par hectare d'image drone pour le comptage, environ 1 s par photo de feuille.
+- **Temps de calcul** (processeur à 2 cœurs, sans GPU) : environ 1 min 40 par hectare d'image drone pour le comptage, environ 3 s par photo de feuille.
 
 ## Contenu du dépôt
 

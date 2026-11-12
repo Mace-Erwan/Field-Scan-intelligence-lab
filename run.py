@@ -60,22 +60,32 @@ def note(part_signalee):
     return int(round(100 * (1 - part_signalee)))
 
 
-def partie_comptage(images_drone, parcelles, mesures, sortie):
+def partie_comptage(images_drone, parcelles, mesures, sortie, avertissements):
     from comptage import detecteur, pieds
     poids = sorted((MODELES / "comptage").glob("*.pt"))
     reseaux = detecteur.charger(poids)
     print(f"Comptage : {len(reseaux)} modèles, {len(images_drone)} image(s) drone")
+    utm = parcelles.estimate_utm_crs()
     tous, couvert = [], {}
     for im in images_drone:
         gdf, surfaces = pieds.compter(im["chemin"], parcelles, reseaux)
         tous.append(gdf)
-        for i, ha in surfaces.items():                 # surface réellement couverte par des pixels d'image
-            couvert[i] = couvert.get(i, 0) + ha
+        for i, zone in surfaces.items():               # surface couverte par des pixels d'image, réunie entre images
+            couvert[i] = zone if i not in couvert else couvert[i].union(zone)
     pieds_gdf = pd.concat(tous, ignore_index=True) if tous else gpd.GeoDataFrame(columns=["id_parcelle", "score", "image", "geometry"])
     pieds_gdf = gpd.GeoDataFrame(pieds_gdf, geometry="geometry", crs="EPSG:4326")
+    avant = len(pieds_gdf)
+    pieds_gdf = pieds.fusionner_doublons(pieds_gdf, utm)   # un pied vu sur deux images qui se recouvrent compte une fois
+    if avant > len(pieds_gdf):
+        print(f"  {avant - len(pieds_gdf)} pieds vus sur deux images fusionnés ({len(pieds_gdf)} pieds au total)")
+    bas, haut = pieds.ECARTEMENT_NORMAL_M
+    for image, d in pieds.ecartement_median(pieds_gdf, utm).items():
+        if not bas <= d <= haut:
+            avertissements.append(f"{image} : les pieds détectés sont espacés de {d:.1f} m en médiane, hors de {bas} à "
+                                  f"{haut} m. La taille du pixel de cette image est peut-être fausse : son compte est à vérifier.")
     pieds_gdf.to_file(sortie / "pieds.geojson", driver="GeoJSON")
     for _, p in parcelles.iterrows():
-        ha = couvert.get(p["id"], 0)
+        ha = couvert[p["id"]].area / 1e4 if p["id"] in couvert else 0
         if ha <= 0:
             continue
         n = int((pieds_gdf.id_parcelle == p["id"]).sum())
@@ -211,16 +221,19 @@ def partie_sentinel2(dates, parcelles, mesures, sortie, alertes_zones):
 LIBELLES = {"black_sigatoka": "cercosporiose (Sigatoka)",
             "fusarium": "jaunissement compatible avec la fusariose (Fusarium), à confirmer par une coupe du pseudo-tronc",
             "malade_non_identifiee": "maladie non identifiée"}
+# « inconnu » : le modèle n'est pas assez sûr, ou (règle B) la feuille n'est pas assez sûrement saine. C'est une alerte.
+TEXTE_INCONNU = "à vérifier, le modèle ne sait pas dire si la feuille est saine (« je ne sais pas »)"
 
 
 def partie_feuilles(photos, parcelles, mesures, sortie):
     from maladies import classifieur
-    reseaux, seuils = classifieur.charger(MODELES / "maladies")
-    print(f"Maladies : {len(photos)} photo(s) de feuilles, {len(reseaux)} modèles")
+    membres, seuils = classifieur.charger(MODELES / "maladies")
+    print(f"Maladies : {len(photos)} photo(s) de feuilles, {sum(len(m['reseaux']) for m in membres)} réseaux")
     debut = time.time()
-    probas = classifieur.probabilites(reseaux, photos)
+    probas = classifieur.probabilites(membres, photos)
     reponses = classifieur.decider(probas, seuils)
     print(f"  {time.time() - debut:.0f} s ({(time.time() - debut) / max(len(photos), 1):.1f} s par photo)")
+    classes = seuils.get("classes", classifieur.CLASSES)     # 3 classes (v2) ou 4 avec « autre »
     lignes = []
     for chemin, p, r in zip(photos, probas, reponses):
         pos = classifieur.position_gps(chemin)
@@ -230,8 +243,7 @@ def partie_feuilles(photos, parcelles, mesures, sortie):
             dedans = parcelles[parcelles.contains(pt)]
             id_p = dedans.id.iloc[0] if len(dedans) else None
         lignes.append({"photo": str(chemin), "reponse": r, "confiance": round(float(p.max()), 3),
-                       "p_saine": round(float(p[0]), 3), "p_black_sigatoka": round(float(p[1]), 3),
-                       "p_fusarium": round(float(p[2]), 3),
+                       **{f"p_{c}": round(float(p[k]), 3) for k, c in enumerate(classes)},
                        "longitude": pos[0] if pos else None, "latitude": pos[1] if pos else None,
                        "parcelle": id_p if id_p is not None else "non localisée"})
     feuilles = pd.DataFrame(lignes)
@@ -245,7 +257,7 @@ def partie_feuilles(photos, parcelles, mesures, sortie):
         for k, (_, f) in enumerate(g[g.reponse != "saine"].iterrows()):
             png = f"apercus/feuille_parcelle_{i}_{k + 1}.png"
             apercus.miniature_photo(f.photo, sortie / png, f"{f.reponse} (confiance {f.confiance})")
-            texte = "maladie inconnue ou photo douteuse (« je ne sais pas »)" if f.reponse == "inconnu" else f"feuille malade : {LIBELLES[f.reponse]}"
+            texte = TEXTE_INCONNU if f.reponse == "inconnu" else f"feuille malade : {LIBELLES[f.reponse]}"
             mi.setdefault("_alertes_supplementaires", []).append(
                 {"theme": "maladies", "message": texte, "source": Path(f.photo).name, "apercu": png})
     return feuilles
@@ -276,7 +288,7 @@ def main():
     alertes_zones, sources, avertissements = [], [], []
     pieds_gdf, s2 = None, None
     if drone:
-        pieds_gdf = partie_comptage(drone, parcelles, mesures, sortie)
+        pieds_gdf = partie_comptage(drone, parcelles, mesures, sortie, avertissements)
         partie_vigueur_drone(drone, parcelles, mesures, sortie, alertes_zones, utiliser_pour_note=not dates)
         sources += [f"drone : {d['chemin'].name}" for d in drone]
         avertissements.append("Le modèle de comptage attend des bananiers vus du dessus ; sur un type de plantation "
@@ -288,6 +300,10 @@ def main():
         feuilles = partie_feuilles(photos, parcelles, mesures, sortie)
         sources.append(f"{len(photos)} photos de feuilles")
         n_hors = int((feuilles.parcelle == "non localisée").sum())
+        hors_alerte = feuilles[(feuilles.parcelle == "non localisée") & (feuilles.reponse != "saine")]
+        for _, f in hors_alerte.iterrows():               # une alerte sans position reste une alerte : on la montre
+            texte = TEXTE_INCONNU if f.reponse == "inconnu" else f"feuille malade : {LIBELLES[f.reponse]}"
+            avertissements.append(f"Photo sans position GPS, {Path(f.photo).name} : {texte}.")
         if n_hors:
             avertissements.append(f"{n_hors} photo(s) de feuilles sans position GPS : résultats dans feuilles.csv, "
                                   "non rattachés à une parcelle.")
