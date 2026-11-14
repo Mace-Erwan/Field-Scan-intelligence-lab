@@ -5,7 +5,7 @@ Field Scan regarde une bananeraie d'en haut et sort un bulletin de santé, parce
 Projet piscine Intelligence Lab, ECE.
 
 ![Bulletin de la démo : 15 parcelles au Cameroun, Sentinel-2 à deux dates, 9 photos de feuilles](docs/images/bulletin_demo.jpg)
-*Le bulletin de la démo du 14/11/2026 : 15 parcelles au Cameroun, Sentinel-2 à deux dates et 9 photos de feuilles. Les parcelles sont colorées par score de santé. À droite, chaque alerte montre l'image qui la justifie.*
+*Le bulletin de la démo du 14/11/2026 : 15 parcelles au Cameroun, Sentinel-2 à deux dates et 9 photos de feuilles prises de près. En haut, les chiffres clés. La carte colore chaque parcelle par son score de santé. À droite, les parcelles à voir en premier, avec leurs alertes et les photos de feuilles en cause.*
 
 ## Le projet
 

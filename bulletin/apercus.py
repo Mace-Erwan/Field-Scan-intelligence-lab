@@ -40,7 +40,7 @@ def rendre(source, crs, t, largeur, hauteur):
         couches, valide = [], np.ones((hauteur, largeur), bool)
         for b in ("B04", "B03", "B02"):
             with rasterio.open(source[b]) as src, WarpedVRT(src, crs=crs, transform=t, width=largeur, height=hauteur,
-                                                           resampling=Resampling.nearest) as vrt:
+                                                           resampling=Resampling.bilinear) as vrt:   # lissé pour l'œil
                 couches.append(vrt.read(1).astype("float32"))
                 valide &= vrt.read_masks(1) > 0
         rgb = np.stack(couches)
@@ -71,16 +71,12 @@ def apercu(chemin_png, source, crs, parcelle, zones, couleur_zone, legende):
                 dessin.polygon(anneau, outline=couleur_zone, width=2)
     for anneau in anneaux_px(parcelle, t):
         dessin.line(anneau + anneau[:1], fill=(255, 255, 255), width=3)
-    dessin.rectangle([0, 0, largeur, 22], fill=(0, 0, 0))
-    dessin.text((6, 5), legende, fill=(255, 255, 255))
-    image.save(chemin_png)
+    image.save(chemin_png)          # la légende est écrite dans la page, pas sur l'image
 
 
-def miniature_photo(chemin_photo, chemin_png, legende):
+def miniature_photo(chemin_photo, chemin_png, legende=None):
+    """Vignette carrée (centre de la photo, 480 px). La légende est écrite dans la page."""
     with Image.open(chemin_photo) as im:
         im = ImageOps.exif_transpose(im).convert("RGB")
-        im.thumbnail((600, 600))
-    dessin = ImageDraw.Draw(im)
-    dessin.rectangle([0, 0, im.width, 22], fill=(0, 0, 0))
-    dessin.text((6, 5), legende, fill=(255, 255, 255))
+        im = ImageOps.fit(im, (480, 480), Image.LANCZOS)
     im.save(chemin_png)
