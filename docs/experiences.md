@@ -1,11 +1,11 @@
 # Journal des essais : Field Scan
 
-Mis à jour le 10/11/2026. Les données sont décrites dans le [carnet de données](carnet_donnees.md).
+Mis à jour le 14/11/2026. Les données sont décrites dans le [carnet de données](carnet_donnees.md).
 
 ## Où j'en suis
 
-- **Comptage** : palm3, installé le 10/11. C'est un détecteur de centres (ResNet-18) : 2 réseaux, 4 vues, seuil 0,25. Au test du 10/11, sa F1 va de 0,767 à 0,778 sur trois types de plantation.
-- **Maladies** : la v10b (ConvNeXt-Tiny aux poids DINOv3, 4 classes, lue en 384 px), avec la règle B, est installée depuis le 11/11 à la place de la v2. Au test neuf, elle laisse 12,0 % des feuilles malades sans alerte, contre 21,3 % pour la v2, mais elle nomme moins souvent la maladie. Sur BanSpot (Inde), elle rate 0,93 % des feuilles tachées, contre 3,56 % pour la v2, pour 10,2 % de fausses alertes contre 5,1 %. La règle écrite avant BanSpot gardait la v2, parce qu'elle n'acceptait que 3 points de fausses alertes en plus. Je l'ai installée quand même, en connaissant ce verdict : rater une feuille malade est plus grave qu'une fausse alerte.
+- **Comptage** : palm3, installé le 10/11. C'est un détecteur de centres (ResNet-18) : 2 réseaux, 4 vues, seuil 0,25. Au test du 10/11, sa F1 va de 0,767 à 0,778 sur trois types de plantation, et elle fait 0,784 sur les bananeraies denses de banavista et jorges (11/11). Le compte, lui, varie beaucoup d'un champ à l'autre (−38 % à +31 %). Plus de 20 essais faits du 12 au 14/11 ne l'ont pas battu.
+- **Maladies** : la v10b (ConvNeXt-Tiny aux poids DINOv3, 4 classes, lue en 384 px), avec la règle B, est installée depuis le 11/11 à la place de la v2. Au test neuf, elle laisse 12,0 % des feuilles malades sans alerte, contre 21,3 % pour la v2, mais elle nomme moins souvent la maladie. Sur BanSpot (Inde), elle rate 0,93 % des feuilles tachées, contre 3,56 % pour la v2, pour 10,2 % de fausses alertes contre 5,1 %. La règle écrite avant BanSpot gardait la v2, parce qu'elle n'acceptait que 3 points de fausses alertes en plus. Je l'ai installée quand même, en connaissant ce verdict : rater une feuille malade est plus grave qu'une fausse alerte. Sur AgroVisionBD (13/11), jamais vu, elle ne rate que 1,26 % des malades, pour 15,26 % de saines en alerte. Les essais du 12 au 13/11 ne l'ont pas battue.
 - **Vigueur et stress hydrique** : indices Sentinel-2 et règles simples, sans apprentissage.
 
 ## Comment je note
@@ -464,6 +464,51 @@ Sur `segmento`, l'erreur de compte moyenne par morceau, en valeur absolue, est d
 - **Les rejets** : 13 sur 26 reçoivent leur propre détection, et comptent donc comme un pied de plus.
 - Même limite que la validation : la zone de test de `segmento` vient de la même grande image que sa zone d'apprentissage, et Nestor est dans la même région que Flora.
 
+### Bananeraies denses : banavista et jorges (11/11/2026)
+
+Deux jeux de bananeraies denses que palm3 n'a jamais appris (carnet, section 14), notés une seule fois. Chaque orthomosaïque est une unité. Avant la note, j'ai cherché par SIFT les images qui montrent le même champ qu'une image apprise.
+
+| Unité | Plants | Détections | F1 | Précision | Rappel | Erreur de compte |
+|---|---|---|---|---|---|---|
+| banavista_0518 | 1 832 | 1 129 | 0,677 | 0,888 | 0,547 | −38,4 % |
+| banavista_maisons_1st_2nd | 2 999 | 3 916 | 0,806 | 0,712 | 0,930 | +30,6 % |
+| banavista_parcelle_essai | 639 | 620 | 0,855 | 0,868 | 0,842 | −3,0 % |
+| banavista_route_815 | 2 970 | 2 206 | 0,772 | 0,906 | 0,673 | −25,7 % |
+| banavista_tagum_bypass | 1 643 | 1 097 | 0,716 | 0,894 | 0,597 | −33,2 % |
+| banavista_task_0511 | 1 823 | 1 714 | 0,815 | 0,841 | 0,791 | −6,0 % |
+| jorges | 5 017 | 4 595 | 0,806 | 0,843 | 0,772 | −8,4 % |
+| **les 7** | 16 923 | 15 277 | **0,784** [0,742 ; 0,806] | 0,826 | 0,746 | **−9,7 %** |
+
+- **La F1 tient** : 0,784, comme sur les autres tests.
+- **Le compte, non** : il va de −38 % à +31 % selon le champ, avec une erreur moyenne de 20,8 % par unité. Le modèle oublie surtout des plants dans les champs serrés (rappel de 0,55 à 0,60 sur deux unités).
+
+La même nuit, deux essais n'ont pas battu palm3 sur les juges (Detecting Plantain Crops et Banano Finca, moyenne 0,758) :
+- **v7**, un détecteur ConvNeXt-Tiny aux poids DINOv3 : validation 0,814, mais juges −0,048 et erreur de compte de 20,5 % ;
+- **palm3 appris sur des données réparées**, 2 versions : juges −0,034 et −0,029, erreur de compte +5 à +6 points.
+
+### Essais du 12 au 14/11/2026 : rien ne bat palm3
+
+Plus de 20 essais, sans réapprendre (sur le PC) ou en réapprenant (Kaggle). Référence : palm3, validation 0,800, juges 0,758, erreur de compte moyenne 12,8 %.
+
+| Idée | Validation | Juges | Retenu ? |
+|---|---|---|---|
+| Seuil placé d'après les scores de chaque champ | 0,801 | 0,746 | non |
+| Lecture à 0,8, 1 et 1,25 fois la taille | 0,806 | 0,740 | non |
+| Échelle recalée sur l'écartement des plants, en deux passes | 0,802 | 0,758 | non |
+| BatchNorm recalculées sur le champ lu | 0,800 | 0,758 | non |
+| Moyenne de 12 réseaux de la même famille | 0,811 | 0,753 | non : 6 fois plus lent, rien de gagné sur les juges |
+| Réseau DINOv3 gelé avec un petit décodeur | 0,767 | 0,704 | non |
+| Couleurs, flou et zoom très variés à l'apprentissage, moyenne des poids | 0,798 | 0,734 | non |
+| Ne plus punir un plant vu sans point (annotations incomplètes) | 0,795 | 0,730 | non |
+| Tests déjà passés ajoutés à l'apprentissage | 0,818 | 0,756 | non : pas de jeu neuf pour le confirmer |
+| Autres réseaux sur les images où palm3 répond faiblement | 0,802 | 0,754 | non |
+
+Ce que j'en retiens :
+- **Mes jeux de validation ne prédisent pas les juges.** Sur 12 modèles, le classement en validation et celui des juges vont plutôt en sens inverse (corrélation de Spearman −0,47). Avec Count banana seul, c'est −0,78. Ce qui gagne en validation retombe donc souvent sur les juges.
+- **Ajouter les tests déjà passés aide le champ dense et gêne le plantain.** Le compte de Banano Finca passe de −33 % à −10 %, celui de Detecting Plantain Crops de −8 % à −26 %. Au total, rien ne change sur les juges.
+- **La lecture en deux passes ne gagne rien, mais elle protège d'une échelle fausse.** Quand la taille du pixel est fausse de 25 %, la F1 reste à 0,811 au lieu de tomber à 0,786.
+- **Banano Finca est 2 à 3 fois plus dense que la validation.** Les deux tiers de ses plants ratés ont un score sous le seuil de 0,25. Un seuil qui dépend de la densité reste une piste, à juger sur un jeu dense jamais vu.
+
 ## 2. Maladies
 
 ### v1 (MobileNetV3)
@@ -851,9 +896,8 @@ En échange, v10b se trompe moins de nom. Sur wfzpdmc5vx, la v2 appelle « Black
 
 Une piste, pas testée : l'alerte de v10b avec le nom de la v2 lue en 384 px. Sur les juges, elle garde 0,3 % et 1,5 % de malades dites saines, et la Sigatoka nommée remonte à 92,5 % sur BDR et 38,4 % sur khadavy. Mais elle donne plus souvent un faux nom aux autres maladies. Il faudrait un autre jeu neuf pour la juger.
 
-#### Où en est v10b
+#### Avant l'installation
 
-Prête, pas installée.
 - Le nouveau `classifieur.py` lit 3 ou 4 classes et plusieurs réseaux. Il redonne la v2 à l'identique (0 réponse différente sur 40, écart de probabilité nul).
 - Sur les mêmes images, le PC redonne les réponses de Kaggle : 80 sur 80.
 - Il faut ajouter `timm` aux dépendances. Les poids DINOv3 demandent la mention « Built with DINOv3 ».
@@ -865,6 +909,57 @@ Prête, pas installée.
 - v10b est la meilleure de 14 lectures sur les deux juges : son score sur les juges est un peu flatté. Sur le test neuf, l'écart est plus petit (−1,9 point).
 - La réponse dépend un peu de la façon dont la photo est réduite : sur les mêmes 80 photos réduites autrement, 8 réponses changent.
 - cm8zf62kzh, BLADE et godliver sont maintenant à l'apprentissage, et twakihasan est réservé aux modèles d'avant : aucun de ces jeux ne peut comparer la v10 à la v2.
+
+### La règle B, et BanSpot (11/11/2026)
+
+**La règle B.** Une feuille n'est dite saine que si P(saine) atteint 0,519. Sinon, la réponse est « je ne sais pas », qui donne une alerte. Sur la validation, les malades dites saines passent de 85 à 61 sur 9 982, et les saines en alerte de 111 à 137 sur 3 718. Un « je ne sais pas » avec 1 − P(saine) d'au moins 0,675 devient « maladie non identifiée ».
+
+**BanSpot** (Inde, carnet section 27) : 646 feuilles tachées et 646 sans taches, notées une seule fois.
+
+| Modèle | Feuilles tachées ratées | Feuilles sans taches en alerte |
+|---|---|---|
+| v2 | 3,56 % | 5,11 % |
+| **v10b + règle B** | **0,93 %** (−2,63 points, de −4,29 à −1,23) | 10,22 % (+5,11 points, de +2,82 à +7,62) |
+
+- v10b rate 4 fois moins de feuilles tachées, et donne deux fois plus de fausses alertes.
+- J'ai relu à l'œil les 50 premières fausses alertes de v10b : 30 feuilles trouées par des insectes ou tachées de brun, 7 déchirures, 1 jaunissement, 12 feuilles qui ont l'air propres. BanSpot appelle « sans taches » toute feuille sans Sigatoka, même trouée.
+- Une relecture à l'aveugle (115 photos mélangées, sans savoir quel modèle avait alerté) trouve 2 fausses alertes sur des feuilles propres pour chaque modèle, soit 0,31 % des 646 photos. Un seul relecteur, qui n'est pas phytopathologiste.
+
+v10b avec la règle B est installée depuis le 11/11 à la place de la v2 : rater une feuille malade est plus grave qu'une fausse alerte.
+
+### AgroVisionBD, Bangladesh (13/11/2026)
+
+1 083 photos jamais vues (carnet, section 28), en 63 séries, notées une seule fois avec la lecture de `run.py` (« je ne sais pas » compte comme une alerte).
+
+| Mesure | v10b + règle B |
+|---|---|
+| Malades ratées | **1,26 %** (9 sur 716 : 7 Cordana, 1 fusariose, 1 Sigatoka) |
+| Saines en alerte | 15,26 % (56 sur 367) |
+| Sigatoka nommée | 26,8 % (48 sur 179) |
+
+- Sur la Sigatoka et la fusariose, elle ne rate que 2 feuilles sur 468.
+- Les fausses alertes sont nombreuses ici : les saines sont photographiées sur pied, les malades posées au sol. Deux séries portent 21 des 56 fausses alertes. Je n'ai pas ouvert les photos pour savoir pourquoi.
+- Elle nomme rarement la Sigatoka : elle alerte, mais répond souvent « maladie non identifiée ».
+
+### Essais du 12 au 14/11/2026 : rien ne bat v10b
+
+Juges : khadavy de près et BDR. Référence v10b + règle B : 0,45 % de malades dites saines, 1,82 % de malades sans alerte, Sigatoka nommée 47,9 %, aucune fausse alerte.
+
+| Idée | Ce qui se passe sur les juges | Retenu ? |
+|---|---|---|
+| v10b réapprise avec twakihasan (v12a), ou en 384 px (v12b) | malades dites saines de 4,1 à 8,3 % | non |
+| v10b ajustée par morceaux (v12e, v12g), et leurs moyennes avec v10b | malades dites saines de 1,4 à 4,7 % | non |
+| Le nom donné par un autre modèle (v10a + v10e) | Sigatoka nommée +7,5 points, mais les autres maladies sont plus souvent mal nommées | non |
+| Moyenne des poids des 3 réseaux (soupe) | ne nomme plus la Sigatoka (86 % → 0 % en validation) | non |
+| Température et seuil garanti par source | 8 % de saines en alerte en validation | non |
+| Nom par les 10 photos les plus proches | noms ajoutés justes à 73 à 82 % seulement | non |
+| Relecture en 4 morceaux des photos douteuses | malades sans alerte 1,82 → 0,61 % | non : sur AgroVisionBD, 0 malade rattrapée et 11 fausses alertes de plus |
+| Seuils réglés sur une validation nettoyée de 34 saines douteuses | malades sans alerte 1,82 → 0,76 % | non : sur AgroVisionBD, rien ne change, et aucune alerte du bulletin ne change |
+
+Ce que j'en retiens :
+- **Réapprendre avec plus de données fait perdre en sécurité.** Les v12 sont meilleures en validation, mais disent « saine » à 5,7 à 13,8 % des malades de khadavy, contre 0,9 % pour v10b.
+- **La relecture par morceaux coûte peu** (environ 1 % de temps en plus, puisqu'elle ne relit que 2,5 % des photos), mais elle n'a rien rattrapé sur un jeu neuf.
+- **Une partie de HEALTHY-1 (Tanzanie 2025, validation) est sans doute mal étiquetée** : environ 140 à 260 feuilles malades rangées « saines », selon mon estimation. Mon détecteur d'étiquettes fausses ne les retrouve pas : il ne voit pas la Sigatoka légère.
 
 ## 3. Vigueur et stress hydrique (Sentinel-2 et drone, `run.py`)
 

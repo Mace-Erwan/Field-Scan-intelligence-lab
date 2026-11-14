@@ -33,8 +33,13 @@ def originaux(dossier):
         for im in j['images']:
             base = re.sub(r'_(jpg|jpeg|png)\.rf\..*$', '', im['file_name'])
             cle = (base, im['width'], im['height'])            # tree : deux découpages (1024 et 1280 px) aux mêmes noms
-            if cle not in choix:
-                choix[cle] = (f'{dossier}/{partie}/{im["file_name"]}', np.array(boites[im['id']], np.float32).reshape(-1, 4))
+            chemin = f'{dossier}/{partie}/{im["file_name"]}'
+            if cle in choix:
+                continue
+            with Image.open(chemin) as fichier:                # le fichier doit avoir la taille annoncée :
+                if fichier.size != (im['width'], im['height']):  # sinon c'est l'autre découpage (vu le 11/11 :
+                    continue                                   # 7 tuiles fausses dans jeunes_rangs)
+            choix[cle] = (chemin, np.array(boites[im['id']], np.float32).reshape(-1, 4))
     return choix
 
 

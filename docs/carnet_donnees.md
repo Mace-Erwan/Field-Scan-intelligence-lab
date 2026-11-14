@@ -1,12 +1,12 @@
 # Carnet de données de Field Scan
 
-Mis à jour le 10/11/2026.
+Mis à jour le 14/11/2026.
 
 ## Vue d'ensemble
 
 ### Photos de feuilles (maladies)
 
-| Jeu | Section | v2 (installée) | v10 (prête, pas installée) |
+| Jeu | Section | v2 (ancienne) | v10b (installée le 11/11) |
 |---|---|---|---|
 | Tanzanie 2023 | 1 | apprentissage (15 691) | apprentissage (15 691) |
 | Pérou | 9 | apprentissage (1 268) | apprentissage (1 268) |
@@ -19,6 +19,8 @@ Mis à jour le 10/11/2026.
 | khadavy, Indonésie probable | 20 | mesure du 08/11 (552) | juge, photos de près (487) |
 | twakihasan | 21 | test neuf du 09/11 (1 869) | jamais noté |
 | Mendeley wfzpdmc5vx et 5nfjzntwd8, Bangladesh | 25, 26 | test neuf du 10/11 (1 602) | test neuf du 10/11 (1 602) |
+| BanSpot, Inde | 27 | test du 11/11 (1 292) | test du 11/11 (1 292) |
+| AgroVisionBD, Bangladesh | 28 | aucun | test du 13/11 (1 083) |
 | PSFD-Musa, Inde | 19 | noté pour information le 06/11 | aucun |
 | banana-buddy | 18 | noté pour information le 06/11 | aucun |
 
@@ -39,7 +41,7 @@ Un juge sert à comparer des modèles. Un test ne sert qu'une fois. Un test indi
 | `jeunes_rangs`, `plantain`, `jeunes_lasuiza` | 13 | apprentissage |
 | Detecting Plantain Crops, Banano Finca | 12 | juges |
 | Palmiers à huile (Cuboid) | 15 | apprentissage (2 zones) ; juge : zone 52000_20000 |
-| `banavista`, `jorges` | 14 | test neuf gardé depuis le 10/11, jamais vu par palm3 |
+| `banavista`, `jorges` | 14 | test du 11/11, jamais appris par palm3 |
 | Fusariose en Chine (multispectral) | 17 | aucun |
 
 Le modèle final apprend aussi la validation. Les scores de validation des essais viennent des modèles d'essai, qui ne l'ont pas apprise.
@@ -78,7 +80,8 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
     - cadrage différent du jeu 2023 : feuilles souvent entières, avec du fond (sol, autres plants, ciel), et non des gros plans ;
     - comme en 2023, chaque classe a surtout été photographiée à des jours différents (EXIF, toutes les photos sont datées) : saines les 22 et 23/11/2022 (2 224 photos) puis du 16 au 18/01/2023 (1 115), Fusarium du 6 au 22/12/2022 (4 344) puis du 18 au 20/01/2023 (588), Black Sigatoka les 12 et 13/01/2023 (3 422) puis les 18 et 20/01 (74). Seul le 18/01/2023 réunit les trois classes. Le biais « classe = jour » existe donc aussi dans la validation ;
     - dans un échantillon de 24 images par classe, des tuyaux d'irrigation bleus apparaissent derrière 3 feuilles saines, et jamais dans les autres classes : un modèle pourrait associer ce décor à la classe saine ;
-    - dans ce même échantillon, 2 feuilles étiquetées saines portent des taches brunes (`HEALTHY_453.jpg`, `HEALTHY_486.jpg`) : il peut y avoir des erreurs d'étiquetage.
+    - dans ce même échantillon, 2 feuilles étiquetées saines portent des taches brunes (`HEALTHY_453.jpg`, `HEALTHY_486.jpg`) : il peut y avoir des erreurs d'étiquetage ;
+    - l'audit du 11/11 le confirme pour `HEALTHY-1` : des feuilles malades y sont rangées « saines », environ 140 à 260 selon mon estimation. v10b ne les voit pas. 34 saines douteuses de la validation sont listées à part.
 
 ![Exemples de doublons](images/doublons_exemples.jpg)
 *À gauche, une copie exacte trouvée dans Tanzanie 2023 : une des deux images est écartée. À droite, une rafale (même feuille, cadrage à peine différent) : les deux restent, puisqu'elles sont dans le même jeu.*
@@ -299,6 +302,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Utilisation** : apprentissage seulement (depuis la v3). Aucune image de ces jeux ne sert à noter, donc pas de découpage par zone. `jeunes_rangs` pèse 38 932 plants à lui seul : je limite sa part à 12 % des morceaux, pour qu'il n'écrase pas les autres jeux.
 - **Copies et fuites** : j'ai comparé une empreinte de chaque image à celles du test, de l'apprentissage, de la validation et des deux juges : aucune image proche. J'ai aussi cherché un recouvrement partiel (même champ sur deux images, points SIFT, méthode de la section 14) entre les 857 images de ces trois jeux et le test, la validation, les juges et les photos DJI du test : aucun.
 - **Limites** : échelle supposée ; qualité des annotations inconnue (17 images de plantain sans aucun plant annoté) ; mères et rejets non séparés.
+- **Défaut trouvé le 11/11** : dans `jeunes_rangs`, 7 tuiles sur 400 portaient l'image de l'autre découpage (1024 et 1280 px ont les mêmes noms), avec des points sur la route et l'herbe. Le script gardait la première copie du zip sans lire sa vraie taille. Il est corrigé depuis le 14/11. palm3 a appris avec ces 7 tuiles fausses.
 
 ## 14. Images drone : banavista et jorges (Roboflow Universe)
 
@@ -444,6 +448,28 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Utilisation** : autre moitié du test neuf du 10/11, noté une seule fois. Les deux jeux ensemble font **1 602 photos** : 1 067 saines, 207 Sigatoka, 45 fusarioses et 283 « autre » (Cordana, Pestalotiopsis, insectes, skipper). Liste figée avant toute note (`modeles/maladies_v10/test_neuf/figer_liste.py`).
 - **Copies et fuites** : avant de noter, j'ai cherché les copies contre les 58 590 images de tous nos jeux (apprentissage, validation, juges, tests), avec 8 orientations. Une seule photo du test était copiée d'un de nos jeux (banana-buddy) : je l'ai retirée. J'ai aussi trouvé 165 paires de copies à l'intérieur du test : une seule photo est gardée par groupe, et les groupes à deux classes sont retirés.
 - **Biais et limites** : « Black and Yellow Sigatoka » mélange deux maladies ; étiquettes des auteurs, sans expert annoncé ; ce test vient du Bangladesh, comme deux sources d'apprentissage de la v10 (BananaLSD, cm8zf62kzh) et le juge BDR : il favorise la v10.
+
+## 27. Feuilles de bananier : BanSpot, Inde (Zenodo)
+
+- **Provenance** : BanSpot, [Zenodo, enregistrement 20098282](https://zenodo.org/records/20098282), téléchargé le 10/11/2026 (environ 5,3 Go). Photos de feuilles du Kerala (Inde), étiquetées « Symptomatic » (taches) ou « Asymptomatic » (sans taches). Les noms de fichiers ne portent que 2 codes de ferme.
+- **Licence** : CC BY 4.0.
+- **Composition** : 1 300 photos. 4 paires de copies internes portent les deux étiquettes : retirées. Il reste 1 292 photos, 646 de chaque étiquette.
+- **Utilisation** : test du 11/11, noté une seule fois, pour comparer la v2 et v10b avec la règle B.
+- **Copies et fuites** : aucune copie parmi nos 60 192 images.
+- **Biais et limites** : « sans taches » veut dire sans Sigatoka : une feuille trouée par des insectes ou déchirée reste « sans taches ». L'heure de prise de vue manque pour 1 144 photos : les séries sont faites avec les numéros de fichiers.
+
+## 28. Feuilles de bananier : AgroVisionBD, Bangladesh (figshare)
+
+- **Provenance** : AgroVisionBD, figshare, article 34005402 (Patuakhali, Bangladesh, d'après son README), partie « feuilles de bananier », téléchargée le 12/11/2026. Photos réduites à 2 048 px de grand côté, EXIF gardé.
+- **Licence** : CC BY 4.0.
+- **Composition** : 1 251 photos. Je retire les 168 photos sans EXIF : ce sont surtout des images du web, dont 4 copies exactes du test du 10/11. Il reste 1 083 photos en 63 séries : 367 saines, 179 Sigatoka, 289 fusarioses (Panama), 248 Cordana.
+- **Utilisation** : test du 13/11, noté une seule fois. La Cordana compte comme une malade.
+- **Copies et fuites** : aucune copie de nos jeux parmi les 1 083 photos gardées, ni à l'intérieur du jeu.
+- **Biais et limites** : tout est pris le 03/06/2026, en 2 h, une photo toutes les 1 à 2 s. Le cadrage dépend de la classe : saines sur pied, malades posées au sol. Le jeu est maintenant consommé pour v10b.
+
+## 29. Jeu écarté : Mendeley ffbb33cj4y, Indonésie
+
+- **Pourquoi écarté** : 150 photos sur 1 046 sont des copies exactes de nos jeux, et d'autres sont tournées ou recadrées. La gravité de la Sigatoka n'est pas notée. Je ne l'utilise pas.
 
 ## Recherche des copies entre tous les jeux de feuilles
 

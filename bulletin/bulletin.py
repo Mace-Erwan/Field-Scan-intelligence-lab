@@ -68,7 +68,7 @@ def ecrire_html(chemin, tableau, alertes, fond, parcelles_px, pieds_px, sources,
         score = r.get("score_sante")
         formes.append(f'<path class="parcelle" data-id="{r["parcelle"]}" d="{d}" fill="{_couleur(score)}" '
                       f'fill-opacity="0.35" stroke="{_couleur(score)}" stroke-width="2"><title>Parcelle {r["parcelle"]}'
-                      f' : score {score if score is not None else "—"}</title></path>')
+                      f' : score {score if score is not None else "non calculé"}</title></path>')
         if anneaux:
             xs, ys = zip(*anneaux[0])
             formes.append(f'<text x="{np.mean(xs):.0f}" y="{np.mean(ys):.0f}" class="etiquette">{r["parcelle"]}</text>')
@@ -87,14 +87,14 @@ def ecrire_html(chemin, tableau, alertes, fond, parcelles_px, pieds_px, sources,
     cartes_alertes = ""
     for a in alertes:
         apercu = f'<a href="{a["apercu"]}" target="_blank"><img src="{a["apercu"]}" alt="image source"></a>' if a.get("apercu") else ""
-        cartes_alertes += (f'<div class="alerte" data-id="{a["parcelle"]}"><b>Parcelle {a["parcelle"]}</b> — '
+        cartes_alertes += (f'<div class="alerte" data-id="{a["parcelle"]}"><b>Parcelle {a["parcelle"]}</b> : '
                            f'{html.escape(a.get("message", ""))}<br><span class="source">Image source : '
-                           f'{html.escape(str(a.get("source", "—")))}</span>{apercu}</div>')
+                           f'{html.escape(str(a.get("source", "inconnue")))}</span>{apercu}</div>')
     if not alertes:
         cartes_alertes = "<p>Aucune alerte.</p>"
 
     page = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Field Scan — bulletin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Field Scan : bulletin</title>
 <style>
 body {{ font-family: system-ui, sans-serif; margin: 16px; color: #1f2328; background: #fff; }}
 h1 {{ font-size: 22px; margin: 0 0 4px; }} .sous-titre {{ color: #57606a; margin-bottom: 16px; }}
@@ -113,7 +113,7 @@ th, td {{ border: 1px solid #d0d7de; padding: 4px 6px; text-align: left; }} th {
 tr.choisie td {{ background: #ddf4ff; }} .legende span {{ display: inline-block; width: 12px; height: 12px; margin: 0 4px 0 12px; }}
 .avert {{ color: #9a6700; font-size: 13px; }}
 </style></head><body>
-<h1>Field Scan — bulletin par parcelle</h1>
+<h1>Field Scan : bulletin par parcelle</h1>
 <div class="sous-titre">Produit le {datetime.now():%d/%m/%Y à %H:%M}. Sources : {html.escape(", ".join(sources)) or "aucune"}.</div>
 {"".join(f'<p class="avert">{html.escape(a)}</p>' for a in avertissements)}
 <div class="legende">Score de santé :<span style="background:#2e7d32"></span>85 et plus
