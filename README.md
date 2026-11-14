@@ -75,8 +75,8 @@ La F1 compte une détection juste si elle tombe à moins de 1 m du cœur d'un vr
 
 Elle rate très peu de malades, même dans des pays qu'elle n'a jamais vus : sur AgroVisionBD, 2 Sigatoka ou fusarioses ratées sur 468. En échange, elle alerte sur des feuilles saines mais abîmées (trous d'insectes, déchirures), et elle nomme rarement la maladie.
 
-![9 feuilles d'AgroVisionBD, leur vraie classe et la réponse du modèle](docs/images/maladies_demo_feuilles.jpg)
-*Les 9 feuilles de la démo (AgroVisionBD, CC BY 4.0), jamais vues par le modèle. Les 6 malades donnent une alerte et les 3 saines sont dites saines. Mais le nom est souvent faux ou absent : une fusariose est appelée Sigatoka, et 3 malades sortent en « maladie non identifiée ».*
+![Une feuille saine, une cercosporiose et une fusariose, vues de près](docs/images/maladies_gros_plans.jpg)
+*Ce que le modèle apprend à reconnaître, en gros plan : une feuille saine, la cercosporiose (Sigatoka noire, des taches brunes cernées de jaune) et la fusariose (la feuille jaunit par le bord). Photos de Tanzanie 2023 (CC0), qui font partie de l'apprentissage.*
 
 ### Ce qui n'a pas marché
 
@@ -157,4 +157,4 @@ Les données ne sont pas dans le dépôt : leurs sources sont décrites dans le 
 
 - Les modèles de maladies utilisent les poids DINOv3 : Built with DINOv3.
 - Les cartes Sentinel-2 : Contains modified Copernicus Sentinel data 2025, 2026.
-- Les photos de feuilles des images ci-dessus viennent d'AgroVisionBD (CC BY 4.0). La parcelle de Manuel vient de ReforesTree (CC BY 4.0).
+- Les photos de feuilles du bulletin viennent d'AgroVisionBD (CC BY 4.0), les gros plans de Tanzanie 2023 (CC0). La parcelle de Manuel vient de ReforesTree (CC BY 4.0).
