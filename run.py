@@ -254,6 +254,9 @@ def partie_feuilles(photos, parcelles, mesures, sortie):
         mi["feuilles_malades"] = int(g.reponse.isin(["black_sigatoka", "fusarium", "malade_non_identifiee"]).sum())
         mi["feuilles_inconnu"] = int((g.reponse == "inconnu").sum())
         mi["note_maladies"] = note(1 - (g.reponse == "saine").mean())
+        n_alerte = int((g.reponse != "saine").sum())
+        mi["_alerte_maladies"] = {"message": f"{n_alerte} feuille(s) en alerte sur {len(g)} photo(s) (détail ci-dessous)",
+                                  "source": "photos de feuilles de la parcelle", "apercu": ""}
         for k, (_, f) in enumerate(g[g.reponse != "saine"].iterrows()):
             png = f"apercus/feuille_parcelle_{i}_{k + 1}.png"
             apercus.miniature_photo(f.photo, sortie / png, f"{f.reponse} (confiance {f.confiance})")
@@ -312,18 +315,23 @@ def main():
     bulletin.ecrire_tableau(sortie / "bulletin.csv", tableau)
 
     # alertes.geojson : zones signalées, ou la parcelle entière quand l'alerte n'a pas de zone
+    # (une parcelle peut avoir plusieurs alertes du même thème, par exemple plusieurs feuilles malades)
+    infos = {}
+    for a in alertes:
+        infos.setdefault((a["parcelle"], a["theme"]), a)
     elements = []
     for z in alertes_zones:
         g = gpd.GeoSeries([z["geometry"]], crs=z["crs"]).to_crs("EPSG:4326").iloc[0]
-        elements.append({"parcelle": z["parcelle"], "theme": z["theme"], "geometry": g})
+        a = infos.get((z["parcelle"], z["theme"]), {})
+        elements.append({"parcelle": z["parcelle"], "theme": z["theme"], "geometry": g, "message": a.get("message", ""),
+                         "source": a.get("source", ""), "apercu": a.get("apercu", "")})
+    avec_zone = {(z["parcelle"], z["theme"]) for z in alertes_zones}
     for a in alertes:
-        if not any(e["parcelle"] == a["parcelle"] and e["theme"] == a["theme"] for e in elements):
+        if (a["parcelle"], a["theme"]) not in avec_zone:
             elements.append({"parcelle": a["parcelle"], "theme": a["theme"],
-                             "geometry": parcelles[parcelles.id == a["parcelle"]].geometry.iloc[0]})
-    infos = {(a["parcelle"], a["theme"]): a for a in alertes}
-    for e in elements:
-        a = infos.get((e["parcelle"], e["theme"]), {})
-        e.update({"message": a.get("message", ""), "source": a.get("source", ""), "apercu": a.get("apercu", "")})
+                             "geometry": parcelles[parcelles.id == a["parcelle"]].geometry.iloc[0],
+                             "message": a.get("message", ""), "source": a.get("source", ""),
+                             "apercu": a.get("apercu", "")})
     gpd.GeoDataFrame(elements, columns=["parcelle", "theme", "message", "source", "apercu", "geometry"],
                      geometry="geometry", crs="EPSG:4326").to_file(sortie / "alertes.geojson", driver="GeoJSON")
 

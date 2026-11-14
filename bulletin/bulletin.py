@@ -107,6 +107,7 @@ h1 {{ font-size: 22px; margin: 0 0 4px; }} .sous-titre {{ color: #57606a; margin
 .alerte {{ border: 1px solid #d0d7de; border-left: 4px solid #c62828; border-radius: 6px; padding: 8px; margin-bottom: 8px; }}
 .alerte img {{ display: block; max-width: 100%; max-height: 280px; margin-top: 6px; border-radius: 4px; }}
 .alerte.cachee {{ display: none; }} .source {{ color: #57606a; font-size: 12px; }}
+.defile {{ overflow-x: auto; }} td:last-child {{ min-width: 360px; }}
 table {{ border-collapse: collapse; margin-top: 16px; font-size: 13px; }}
 th, td {{ border: 1px solid #d0d7de; padding: 4px 6px; text-align: left; }} th {{ background: #f6f8fa; }}
 tr.choisie td {{ background: #ddf4ff; }} .legende span {{ display: inline-block; width: 12px; height: 12px; margin: 0 4px 0 12px; }}
@@ -120,7 +121,7 @@ tr.choisie td {{ background: #ddf4ff; }} .legende span {{ display: inline-block;
 <span style="background:#9aa0a6"></span>non calculé{" · points bleus : pieds détectés" if pieds_px else ""}.
 Cliquer sur une parcelle n'affiche que ses alertes ; cliquer à nouveau les affiche toutes.</div>
 <div class="haut">{carte}<div id="alertes"><h2>Alertes</h2>{cartes_alertes}</div></div>
-<table><thead><tr>{entete}</tr></thead><tbody>{corps}</tbody></table>
+<div class="defile"><table><thead><tr>{entete}</tr></thead><tbody>{corps}</tbody></table></div>
 <script>
 let choisie = null;
 document.querySelectorAll('.parcelle, tbody tr').forEach(el => el.addEventListener('click', () => {{
