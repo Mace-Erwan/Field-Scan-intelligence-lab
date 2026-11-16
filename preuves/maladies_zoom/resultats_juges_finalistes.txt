@@ -1,0 +1,69 @@
+Mesures principales (part des photos)
+version                             v2   v2_384       v6       v8    soupe
+saines_ok_tanzanie_2025         96.0 %   99.0 %   95.0 %   86.0 %   94.0 %
+fausses_alertes_tanzanie_2025    0.5 %    0.5 %    0.0 %    0.5 %    0.5 %
+saines_ok_bdr                  100.0 %  100.0 %  100.0 %  100.0 %  100.0 %
+fausses_alertes_bdr              0.0 %    0.0 %    0.0 %    0.0 %    0.0 %
+tz_sigatoka_nommee              93.0 %   91.0 %   94.0 %   92.0 %   92.5 %
+tz_sigatoka_dite_saine           0.0 %    0.5 %    0.0 %    0.0 %    0.0 %
+tz_fusariose_nommee             90.5 %   89.0 %   88.5 %   90.5 %   88.5 %
+tz_fusariose_dite_saine          1.5 %    1.5 %    1.5 %    2.0 %    1.0 %
+bdr_sigatoka_nommee             85.1 %   94.0 %   88.1 %   89.6 %   89.6 %
+bdr_sigatoka_dite_saine          1.5 %    1.5 %    1.5 %    1.5 %    1.5 %
+bdr_fusariose_nommee            43.9 %   41.5 %   56.1 %   46.3 %   36.6 %
+bdr_fusariose_dite_saine         0.0 %    0.0 %    0.0 %    0.0 %    0.0 %
+tz_malades_dites_saines          0.8 %    1.0 %    0.8 %    1.0 %    0.5 %
+bdr_malades_dites_saines         3.1 %    2.5 %    6.5 %    5.3 %    4.0 %
+
+Répartition des réponses (nombre de photos)
+          jeu                     classe   n version  saine  black_sigatoka  fusarium  malade_non_identifiee  inconnu
+          bdr     Black Sigatoka Disease  67      v2      1              57         2                      0        7
+          bdr     Black Sigatoka Disease  67  v2_384      1              63         1                      0        2
+          bdr     Black Sigatoka Disease  67      v6      1              59         1                      0        6
+          bdr     Black Sigatoka Disease  67      v8      1              60         2                      0        4
+          bdr     Black Sigatoka Disease  67   soupe      1              60         1                      0        5
+          bdr Bract Mosaic Virus Disease  50      v2      0              47         0                      0        3
+          bdr Bract Mosaic Virus Disease  50  v2_384      0              46         0                      0        4
+          bdr Bract Mosaic Virus Disease  50      v6      0              33         5                      0       12
+          bdr Bract Mosaic Virus Disease  50      v8      0              49         1                      0        0
+          bdr Bract Mosaic Virus Disease  50   soupe      0              49         0                      0        1
+          bdr               Healthy Leaf  86      v2     86               0         0                      0        0
+          bdr               Healthy Leaf  86  v2_384     86               0         0                      0        0
+          bdr               Healthy Leaf  86      v6     86               0         0                      0        0
+          bdr               Healthy Leaf  86      v8     86               0         0                      0        0
+          bdr               Healthy Leaf  86   soupe     86               0         0                      0        0
+          bdr        Insect Pest Disease  86      v2      9              35         5                      0       37
+          bdr        Insect Pest Disease  86  v2_384      7              51         1                      0       27
+          bdr        Insect Pest Disease  86      v6     20              29         3                      0       34
+          bdr        Insect Pest Disease  86      v8     15              45         4                      0       22
+          bdr        Insect Pest Disease  86   soupe     12              42         2                      0       30
+          bdr               Moko Disease  55      v2      0              15        24                      0       16
+          bdr               Moko Disease  55  v2_384      0              16        24                      0       15
+          bdr               Moko Disease  55      v6      0              13        22                      0       20
+          bdr               Moko Disease  55      v8      1              17        18                      0       19
+          bdr               Moko Disease  55   soupe      0              15        17                      0       23
+          bdr             Panama Disease  41      v2      0              18        18                      0        5
+          bdr             Panama Disease  41  v2_384      0              16        17                      0        8
+          bdr             Panama Disease  41      v6      0              10        23                      0        8
+          bdr             Panama Disease  41      v8      0              18        19                      0        4
+          bdr             Panama Disease  41   soupe      0              18        15                      0        8
+          bdr    Yellow Sigatoka Disease  23      v2      0              21         0                      0        2
+          bdr    Yellow Sigatoka Disease  23  v2_384      0              23         0                      0        0
+          bdr    Yellow Sigatoka Disease  23      v6      0              22         0                      0        1
+          bdr    Yellow Sigatoka Disease  23      v8      0              23         0                      0        0
+          bdr    Yellow Sigatoka Disease  23   soupe      0              22         0                      0        1
+tanzanie_2025             black_sigatoka 200      v2      0             186         4                      0       10
+tanzanie_2025             black_sigatoka 200  v2_384      1             182         9                      0        8
+tanzanie_2025             black_sigatoka 200      v6      0             188         4                      0        8
+tanzanie_2025             black_sigatoka 200      v8      0             184        10                      0        6
+tanzanie_2025             black_sigatoka 200   soupe      0             185         2                      0       13
+tanzanie_2025                   fusarium 200      v2      3               6       181                      0       10
+tanzanie_2025                   fusarium 200  v2_384      3               6       178                      0       13
+tanzanie_2025                   fusarium 200      v6      3               5       177                      0       15
+tanzanie_2025                   fusarium 200      v8      4               4       181                      0       11
+tanzanie_2025                   fusarium 200   soupe      2               5       177                      0       16
+tanzanie_2025                      saine 200      v2    192               0         1                      0        7
+tanzanie_2025                      saine 200  v2_384    198               0         1                      0        1
+tanzanie_2025                      saine 200      v6    190               0         0                      0       10
+tanzanie_2025                      saine 200      v8    172               1         0                      0       27
+tanzanie_2025                      saine 200   soupe    188               1         0                      0       11

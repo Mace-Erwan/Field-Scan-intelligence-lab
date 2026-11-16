@@ -11,6 +11,10 @@ indice est sous 80 % du niveau normal de la plantation, c'est-à-dire du 75e cen
 toutes les parcelles (le niveau atteint par le quart le plus vert). Elle est relative à la plantation
 analysée, et non un seuil fixe, parce que le niveau normal change d'un site, d'une saison et d'un
 capteur à l'autre (voir docs/experiences.md, section 3).
+
+La même règle est aussi appliquée à l'intérieur de chaque parcelle, avec le niveau normal de la parcelle :
+elle trouve les taches moins vigoureuses que le reste de la parcelle, même dans une parcelle qui va bien
+face aux autres. Une zone est faible si elle l'est pour l'une des deux règles.
 """
 
 import numpy as np
@@ -39,6 +43,18 @@ def zones_faibles(indice, dans_parcelles):
     with np.errstate(invalid="ignore"):
         faible = dans_parcelles & (indice < FRACTION_NORMALE * reference)
     return faible, reference
+
+
+def taches_faibles(indice, masque_parcelle):
+    """Taches moins vigoureuses que le reste de LA PARCELLE : même règle (80 % du 75e centile), mais avec le
+    niveau normal de la parcelle elle-même. Une parcelle faible partout n'a pas de tache : c'est la règle de
+    la plantation (zones_faibles) qui la signale."""
+    valeurs = indice[masque_parcelle & np.isfinite(indice)]
+    if valeurs.size < 4:
+        return np.zeros(indice.shape, bool)
+    reference = float(np.percentile(valeurs, CENTILE_REFERENCE))
+    with np.errstate(invalid="ignore"):
+        return masque_parcelle & (indice < FRACTION_NORMALE * reference)
 
 
 def indices_rgb(rgb):

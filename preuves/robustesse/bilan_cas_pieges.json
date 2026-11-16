@@ -1,0 +1,122 @@
+[
+  {
+    "cas": "01_reference",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 31,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477              NaN               NaN               NaN            NaN          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100        "
+  },
+  {
+    "cas": "02_parcelles_utm",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 12,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Rés"
+  },
+  {
+    "cas": "03_parcelles_sans_id",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 12,
+    "fin": " Bloc 13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |  Bloc 15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Résul"
+  },
+  {
+    "cas": "04_parcelles_geopackage",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 13,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Rés"
+  },
+  {
+    "cas": "05_multipolygone_et_contour_croise",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 13,
+    "fin": "      13        13        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |       15        14        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Résul"
+  },
+  {
+    "cas": "06_une_seule_date",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 12,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100          100 | 3 alerte(s). Résultats dans C:\\Field_scan\\tests_robustes"
+  },
+  {
+    "cas": "07_bandes_manquantes",
+    "attendu": "bulletin ou message clair",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 14,
+    "fin": "       14        14        2.84            0.729               0.0               0.0           100          100 |        15        15        4.38            0.803               0.0               0.0           100          100 | 2 alerte(s). Résultats dans C:\\Field_scan\\tests_robustesse\\cas\\07_bandes_manquantes\\resultats (ouvrir bulletin.html)"
+  },
+  {
+    "cas": "08_noms_courts",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 13,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Rés"
+  },
+  {
+    "cas": "09_date_compacte",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 12,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100           0.0       100              -0.030          100 | 5 alerte(s). Rés"
+  },
+  {
+    "cas": "10_feuilles_png_sans_gps_tournees",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 31,
+    "fin": "       14        14        2.84          NaN              NaN               NaN               NaN            NaN |        15        15        4.38          NaN              NaN               NaN               NaN            NaN | 6 alerte(s). Résultats dans C:\\Field_scan\\tests_robustesse\\cas\\10_feuilles_png_sans_gps_tournees\\resultats (ouvrir bulletin.html)"
+  },
+  {
+    "cas": "11_dossier_vide",
+    "attendu": "message clair",
+    "resultat": "OK : arrêt avec message",
+    "code": 1,
+    "duree_s": 12,
+    "fin": "15 parcelles ; trouvé : 0 image(s) drone, 0 date(s) Sentinel-2, 0 photo(s) de feuilles | Aucune image utilisable dans le dossier."
+  },
+  {
+    "cas": "12_drone_en_utm",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 37,
+    "fin": " parcelle  priorite  surface_ha  pieds  pieds_par_ha  vari  couverture_vegetale_%  vigueur_drone_faible_%  vigueur_drone_taches_%  note_vigueur  score_sante |         4         1        0.41    131           322 0.028                   41.8                    65.1                    65.1            35           35 | 1 alerte(s). Résultats dans C:\\Field_scan\\tests_robustesse\\cas\\12_drone_en_utm\\res"
+  },
+  {
+    "cas": "13_parcelles_hors_images",
+    "attendu": "bulletin ou message clair",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 19,
+    "fin": "0 alerte(s). Résultats dans C:\\Field_scan\\tests_robustesse\\cas\\13_parcelles_hors_images\\resultats (ouvrir bulletin.html) | C:\\Field_scan\\.venv\\Lib\\site-packages\\numpy\\lib\\_nanfunctions_impl.py:1213: RuntimeWarning: Mean of empty slice |   return np.nanmean(a, axis, out=out, keepdims=keepdims)"
+  },
+  {
+    "cas": "14_chemin avec espaces et accents é",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 68,
+    "fin": "       13        14        2.77            0.846            0.641            0.450               0.0               0.0           100           0.0       100               0.477              NaN               NaN               NaN            NaN          100 |        15        15        4.38            0.803            0.619            0.405               0.0               0.0           100        "
+  },
+  {
+    "cas": "15_drone_et_feuilles_meme_dossier",
+    "attendu": "bulletin",
+    "resultat": "OK : bulletin écrit",
+    "code": 0,
+    "duree_s": 107,
+    "fin": " parcelle  priorite  surface_ha  pieds  pieds_par_ha  vari  couverture_vegetale_%  vigueur_drone_faible_%  vigueur_drone_taches_%  note_vigueur  score_sante |         4         1        0.41    132           324 0.028                   41.9                    65.1                    65.1            35           35 | 1 alerte(s). Résultats dans C:\\Field_scan\\tests_robustesse\\cas\\15_drone_et_feuille"
+  }
+]

@@ -1,0 +1,41 @@
+gsd_cm,version,seuil,jeu,f1,erreur_compte,plants,detections,faux_par_ha
+5,fixe,0.25,Plantain,0.7707,0.0337,208.0,215.0,
+5,fixe,0.25,Banano Finca,0.7375,-0.3423,409.0,269.0,
+5,fixe,0.25,jorges,0.8055,-0.0843,5017.0,4594.0,
+5,fixe,0.25,palmiers,,,,,1.67
+5,variable,0.25,Plantain,0.7707,0.0337,208.0,215.0,
+5,variable,0.25,Banano Finca,0.7375,-0.3423,409.0,269.0,
+5,variable,0.25,jorges,0.8055,-0.0843,5017.0,4594.0,
+5,variable,0.25,palmiers,,,,,1.67
+8,fixe,0.25,Plantain,0.7317,-0.226,208.0,161.0,
+8,fixe,0.25,Banano Finca,0.6822,-0.4303,409.0,233.0,
+8,fixe,0.25,jorges,0.8037,-0.1395,5017.0,4317.0,
+8,fixe,0.25,palmiers,,,,,1.74
+8,variable,0.25,Plantain,0.7317,-0.226,208.0,161.0,
+8,variable,0.25,Banano Finca,0.6822,-0.4303,409.0,233.0,
+8,variable,0.25,jorges,0.8037,-0.1395,5017.0,4317.0,
+8,variable,0.25,palmiers,,,,,1.74
+11,fixe,0.25,Plantain,0.6848,-0.4135,208.0,122.0,
+11,fixe,0.25,Banano Finca,0.6318,-0.5061,409.0,202.0,
+11,fixe,0.25,jorges,0.7886,-0.1888,5017.0,4070.0,
+11,fixe,0.25,palmiers,,,,,2.05
+11,variable,0.2,Plantain,0.7409,-0.274,208.0,151.0,
+11,variable,0.2,Banano Finca,0.7104,-0.3961,409.0,247.0,
+11,variable,0.2,jorges,0.8027,-0.1228,5017.0,4401.0,
+11,variable,0.2,palmiers,,,,,3.97
+14,fixe,0.25,Plantain,0.6869,-0.4183,208.0,121.0,
+14,fixe,0.25,Banano Finca,0.6151,-0.5134,409.0,199.0,
+14,fixe,0.25,jorges,0.7733,-0.2214,5017.0,3906.0,
+14,fixe,0.25,palmiers,,,,,2.57
+14,variable,0.2,Plantain,0.7147,-0.2644,208.0,153.0,
+14,variable,0.2,Banano Finca,0.6791,-0.4303,409.0,233.0,
+14,variable,0.2,jorges,0.7926,-0.1517,5017.0,4256.0,
+14,variable,0.2,palmiers,,,,,4.5
+20,fixe,0.25,Plantain,0.631,-0.3846,208.0,128.0,
+20,fixe,0.25,Banano Finca,0.5898,-0.5575,409.0,181.0,
+20,fixe,0.25,jorges,0.7628,-0.2394,5017.0,3816.0,
+20,fixe,0.25,palmiers,,,,,3.07
+20,variable,0.2,Plantain,0.6873,-0.1394,208.0,179.0,
+20,variable,0.2,Banano Finca,0.641,-0.4743,409.0,215.0,
+20,variable,0.2,jorges,0.7877,-0.1638,5017.0,4195.0,
+20,variable,0.2,palmiers,,,,,5.12

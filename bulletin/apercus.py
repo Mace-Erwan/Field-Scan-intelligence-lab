@@ -53,6 +53,31 @@ def rendre(source, crs, t, largeur, hauteur):
     return Image.fromarray(rgb.transpose(1, 2, 0).astype(np.uint8))
 
 
+PALETTE_VIGUEUR = [(140, 81, 10), (216, 179, 101), (246, 232, 195), (199, 234, 170), (90, 174, 97), (0, 104, 55)]
+PALETTE_EAU = [(178, 24, 43), (239, 138, 98), (247, 247, 247), (103, 169, 207), (33, 102, 172)]
+
+
+def _colorer(valeurs, palette, vmin, vmax):
+    """Valeurs -> couleurs RGBA (transparent hors données), en interpolant la palette entre vmin et vmax."""
+    x = np.clip((valeurs - vmin) / (vmax - vmin), 0, 1)
+    pos = x * (len(palette) - 1)
+    i = np.clip(np.floor(np.nan_to_num(pos)).astype(int), 0, len(palette) - 2)
+    f = np.nan_to_num(pos - i)[..., None]
+    pal = np.array(palette, "float32")
+    rgb = pal[i] * (1 - f) + pal[i + 1] * f
+    alpha = np.where(np.isfinite(valeurs), 215, 0).astype("uint8")
+    return np.dstack([rgb.astype("uint8"), alpha])
+
+
+def rendre_carte(chemin_tif, crs, t, largeur, hauteur, palette, vmin, vmax):
+    """Calque coloré (PIL RGBA) d'une carte GeoTIFF (vigueur.tif, stress.tif) dans la grille du fond."""
+    with rasterio.open(chemin_tif) as src, WarpedVRT(src, crs=crs, transform=t, width=largeur, height=hauteur,
+                                                     resampling=Resampling.bilinear, src_nodata=np.nan,
+                                                     nodata=np.nan) as vrt:
+        valeurs = vrt.read(1).astype("float32")
+    return Image.fromarray(_colorer(valeurs, palette, vmin, vmax), "RGBA")
+
+
 def anneaux_px(geometrie, t):
     """Contours extérieurs d'un (multi)polygone en pixels de la grille."""
     inverse = ~t

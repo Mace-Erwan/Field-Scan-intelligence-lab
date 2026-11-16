@@ -2,8 +2,9 @@
 
 Le dossier peut contenir, dans n'importe quels sous-dossiers :
   - des images drone géoréférencées (GeoTIFF, une seule image avec ses bandes, pixel de moins de 1 m) ;
-  - des bandes Sentinel-2 exportées du Copernicus Browser (un fichier par bande, date et nom de bande
-    dans le nom du fichier, par exemple 2025-12-16-00_00_..._B04_(Raw).tiff), une ou plusieurs dates ;
+  - des bandes Sentinel-2 exportées du Copernicus Browser (un fichier par bande), une ou plusieurs dates.
+    Le nom de la bande est dans le nom du fichier (..._B04_(Raw).tiff, ou simplement B04.tiff) ; la date
+    aussi, ou à défaut dans le nom d'un dossier parent (sentinel2/2023-02-10/B04.tiff) ;
   - des photos de feuilles, dans un dossier nommé « feuilles ».
 """
 
@@ -16,16 +17,33 @@ import rasterio
 EXTENSIONS_RASTER = (".tif", ".tiff")
 EXTENSIONS_PHOTO = (".jpg", ".jpeg", ".png")
 BANDES_S2 = ("B02", "B03", "B04", "B05", "B08", "B8A", "B11", "B12")
-MOTIF_DATE = re.compile(r"(\d{4}-\d{2}-\d{2})")
-MOTIF_BANDE = re.compile(r"_(B\d[\dA])_")
+MOTIF_DATE = re.compile(r"(?<!\d)(20\d{2})[-_]?([01]\d)[-_]?([0-3]\d)(?!\d)")    # 2025-12-16, 20251216, 2025_12_16
+MOTIF_BANDE = re.compile(r"(?:^|[_\-. ])(B\d[\dA])(?=$|[_\-. (])", re.IGNORECASE)
 
 
 def _rasters(dossier):
     return sorted(f for f in Path(dossier).rglob("*") if f.suffix.lower() in EXTENSIONS_RASTER)
 
 
+def _bande(fichier):
+    """Nom de la bande Sentinel-2 d'un fichier (B04, B8A, SCL...), ou None."""
+    if "scene_classification" in fichier.name.lower() or re.search(r"(?:^|[_\-. ])SCL(?=$|[_\-. (])", fichier.stem, re.I):
+        return "SCL"
+    m = MOTIF_BANDE.search(fichier.stem)
+    return m.group(1).upper() if m and m.group(1).upper() in BANDES_S2 else None
+
+
 def _est_sentinel2(fichier):
-    return bool(MOTIF_BANDE.search(fichier.name)) or "Scene_classification" in fichier.name
+    return _bande(fichier) is not None
+
+
+def _date(fichier):
+    """Date du nom du fichier, sinon du dossier parent le plus proche qui en porte une."""
+    for nom in [fichier.name] + [d.name for d in fichier.parents]:
+        m = MOTIF_DATE.search(nom)
+        if m:
+            return "-".join(m.groups())
+    return "sans_date"
 
 
 def sentinel2(dossier):
@@ -34,9 +52,7 @@ def sentinel2(dossier):
     for f in _rasters(dossier):
         if not _est_sentinel2(f):
             continue
-        date = MOTIF_DATE.search(f.name)
-        date = date.group(1) if date else "sans_date"
-        bande = "SCL" if "Scene_classification" in f.name else MOTIF_BANDE.search(f.name).group(1)
+        date, bande = _date(f), _bande(f)
         if bande in dates.setdefault(date, {}):
             raise ValueError(f"Deux fichiers pour la bande {bande} du {date} : {dates[date][bande]} et {f}")
         dates[date][bande] = f
@@ -82,8 +98,9 @@ def photos_feuilles(dossier):
 def parcelles(chemin):
     """Parcelles du fichier GeoJSON, avec une colonne id (créée si absente) et leur surface en hectares."""
     p = gpd.read_file(chemin)
-    if "id" not in p.columns:
-        p["id"] = range(1, len(p) + 1)
+    if "id" not in p.columns:                       # identifiant d'un autre nom (parcelle_id, nom...), sinon 1, 2, 3...
+        autre = next((c for c in ("parcelle_id", "id_parcelle", "parcelle", "ID", "Id", "nom", "name") if c in p.columns), None)
+        p["id"] = p[autre].astype(str) if autre and p[autre].is_unique else range(1, len(p) + 1)
     p = p[["id", "geometry"]].copy()
     p["geometry"] = p.geometry.force_2d().make_valid()      # répare les contours qui se recoupent
     utm = p.estimate_utm_crs()

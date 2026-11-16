@@ -1,0 +1,12 @@
+{
+  "fige_le": "2026-11-14T23:06:51",
+  "modele_reglage": "essai palm3 v6",
+  "seuils_par_gsd_cm": {
+    "5": 0.25,
+    "8": 0.25,
+    "11": 0.2,
+    "14": 0.2,
+    "20": 0.2
+  },
+  "note": "à 5 cm, la règle redonne 0,25"
+}

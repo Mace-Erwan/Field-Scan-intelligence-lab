@@ -344,7 +344,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Résolution** : 512 × 512 px.
 - **Date d'acquisition** : non indiquée.
 - **Composition** : 408 photos originales : 86 saines, 67 Black Sigatoka, 23 Yellow Sigatoka, 41 Panama (fusariose), 86 dégâts d'insectes, 55 Moko, 50 virus de la mosaïque des bractées. Le dépôt contient aussi 2 856 images augmentées, que je n'utilise pas.
-- **Utilisation** : jamais appris. Juge des maladies : comparaison des essais v3 et v4 avec la v2 (06/11), des lectures de la v2 (08/11), puis des candidats v10 (10/11). La Black Sigatoka doit être nommée, la fusariose aussi ; toutes les autres maladies et les insectes doivent déclencher une alerte. Pour la v10, les photos sont réduites à 896 px de petit côté (`modeles/maladies_v10/preparer_juges.py`).
+- **Utilisation** : jamais appris. Juge des maladies : comparaison des essais v3 et v4 avec la v2 (06/11), des lectures de la v2 (08/11), puis des candidats v10 (10/11). La Black Sigatoka doit être nommée, la fusariose aussi ; toutes les autres maladies et les insectes doivent déclencher une alerte. Pour la v10, les photos sont réduites à 896 px de petit côté (`preuves/maladies_v10/preparer_juges.py`).
 - **Copies et fuites** : aucune copie avec nos autres jeux (audit du 08/11, 8 orientations). Mais 123 de ses photos se retrouvent dans cm8zf62kzh, avec les mêmes noms de fichiers (section 22) : je les retire de cm8zf62kzh.
 - **Biais et limites** : petit jeu (de 23 à 86 photos par classe) ; images carrées en 512 px ; pas de date ni de lieu ; étiquettes sans expert annoncé. Il a servi à comparer plusieurs modèles, donc son score est un peu flatté.
 
@@ -380,7 +380,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Provenance** : projet « Klasifikasi Daun Pisang » (espace khadavy) sur Roboflow Universe, exporté le 08/11/2026 sans augmentation, au format dossiers. Pays probable : Indonésie (noms de classes en indonésien).
 - **Licence** : CC BY 4.0.
 - **Composition** : 755 images, en 3 classes : `Bercak-Hitam` (taches noires) 252, `Sehat` (saine) 251, `Bercak-Kuning` (taches jaunes) 252. Ces traductions sont une interprétation.
-- **Préparation** (`modeles/maladies_khadavy/`) : une seule photo par groupe de copies internes, et les photos présentes avec deux étiquettes sont écartées. Il reste 552 photos : 251 taches noires, 160 saines, 141 taches jaunes. Beaucoup sont des **rafales** (la même feuille photographiée plusieurs fois d'affilée) : je les regroupe en 276 séries, d'après le nom (heure ou numéro qui se suit) et la ressemblance (corrélation d'au moins 0,8 en 32 × 32 couleur). J'ai aussi trié à l'œil, avant toute mesure, les photos « de près » (une feuille occupe la plus grande partie de la photo) et « de loin » (`tri_distance.csv`) : 487 photos de près, en 238 séries.
+- **Préparation** (`preuves/maladies_khadavy/khadavy_copies.py`) : une seule photo par groupe de copies internes, et les photos présentes avec deux étiquettes sont écartées. Il reste 552 photos : 251 taches noires, 160 saines, 141 taches jaunes. Beaucoup sont des **rafales** (la même feuille photographiée plusieurs fois d'affilée) : je les regroupe en 276 séries, d'après le nom (heure ou numéro qui se suit) et la ressemblance (corrélation d'au moins 0,8 en 32 × 32 couleur). J'ai aussi trié à l'œil, avant toute mesure, les photos « de près » (une feuille occupe la plus grande partie de la photo) et « de loin » (`tri_distance.csv`) : 487 photos de près, en 238 séries.
 - **Utilisation** : jamais appris. Mesure de la v2 le 08/11 (552 photos), notes des finalistes maladies le 09/11, puis juge des candidats v10 (photos de près). Taches noires = Black Sigatoka à nommer ; taches jaunes = maladie jamais apprise, qui doit déclencher une alerte.
 - **Copies et fuites** : aucune copie avec nos jeux (Tanzanie 2023 et 2025, Pérou, BananaLSD, BDR, puis audit du 08/11 sur 8 orientations).
 - **Biais et limites** : beaucoup de feuilles à quelques petites taches, des symptômes légers ; les rafales font peser certaines scènes plus que d'autres ; étiquettes sans expert annoncé. C'est ce jeu qui m'a donné l'idée de lire les photos en 384 px : il n'est donc pas neutre pour juger cette idée.
@@ -392,7 +392,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Résolution** : 8 160 × 6 120 px (quelques-unes en 4 000 × 3 000), photos de téléphone au champ.
 - **Date d'acquisition** : presque toutes du 05/12/2025, d'après les noms de fichiers.
 - **Composition** : 2 638 photos, en 3 classes : `healthy`, `panama` (fusariose), `sigatoka`. Beaucoup de Sigatoka à quelques petites taches ; les fusarioses sont des feuilles jaunies et sèches.
-- **Préparation** (`modeles/maladies_twakihasan/`) : les parties `train`, `val` et `test` du jeu partagent des copies (489 groupes à cheval sur deux parties) : je les ignore. Je garde une photo par groupe de copies (1 883 photos distinctes) et j'écarte les 14 groupes qui mélangent `panama` et `sigatoka`. Il reste **1 869 photos** : 1 183 Sigatoka, 407 saines, 279 fusarioses. Les rafales (photos de la même classe à 60 s au plus d'intervalle, et très ressemblantes) forment des séries : 1 768 séries.
+- **Préparation** (`preuves/maladies_twakihasan/figer_liste.py`) : les parties `train`, `val` et `test` du jeu partagent des copies (489 groupes à cheval sur deux parties) : je les ignore. Je garde une photo par groupe de copies (1 883 photos distinctes) et j'écarte les 14 groupes qui mélangent `panama` et `sigatoka`. Il reste **1 869 photos** : 1 183 Sigatoka, 407 saines, 279 fusarioses. Les rafales (photos de la même classe à 60 s au plus d'intervalle, et très ressemblantes) forment des séries : 1 768 séries.
 - **Utilisation** : test neuf, noté une seule fois le 09/11 avec les finalistes maladies de ce jour, dont la v2 et la v6. La v10 n'y est pas notée.
 - **Copies et fuites** : aucune copie avec nos jeux (Tanzanie 2023 et 2025, Pérou, BananaLSD, BDR, PSFD, banana-buddy, khadavy ; 8 orientations).
 - **Biais et limites** : presque tout est pris le même jour, sans doute au même endroit ; étiquettes sans expert annoncé ; une feuille jaunie et sèche peut aussi venir de la vieillesse ; la méthode des copies ne voit pas une autre photo de la même feuille.
@@ -405,7 +405,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Composition** : 6 005 photos en 6 dossiers : feuilles saines, Black Sigatoka, Yellow Sigatoka, fusariose (Panama), dégâts d'insectes, « Moko or dead ».
 - **Utilisation** :
     - test indicatif de la v2 le 09/11 (1 800 photos, 300 par classe) ;
-    - pour la v10 : 5 001 photos (640 saines, 875 Black Sigatoka, 699 fusarioses, 2 787 « autre » : Sigatoka jaune, insectes, Moko ou feuille morte), 75 % en apprentissage et 25 % en validation, par groupes de copies (`modeles/maladies_v10/preparer_v10.py`).
+    - pour la v10 : 5 001 photos (640 saines, 875 Black Sigatoka, 699 fusarioses, 2 787 « autre » : Sigatoka jaune, insectes, Moko ou feuille morte), 75 % en apprentissage et 25 % en validation, par groupes de copies (`preuves/maladies_v10/preparer_v10.py`).
 - **Copies et fuites** : **123 copies de BDR**, avec les mêmes noms de fichiers (35 Black Sigatoka, 26 Panama, 24 saines, 23 insectes, 15 Yellow Sigatoka) : retirées, pour que BDR reste un juge. 1 237 paires de copies internes (1 297 photos), et 5 paires à deux étiquettes (Sigatoka jaune et fusariose), retirées. La page de recherche signale un dépôt voisin de la même autrice, Mendeley 6yy9522rdy, probablement les mêmes photos : je ne l'ai pas téléchargé.
 - **Biais et limites** : petites images ; une partie des « Black Sigatoka » ressemble à des feuilles mortes ; « Moko or dead » montre surtout des plantes mortes au sol ; aucun expert n'est cité pour les étiquettes ; même pays que BananaLSD et BDR.
 
@@ -445,7 +445,7 @@ Le modèle final apprend aussi la validation. Les scores de validation des essai
 - **Licence** : CC BY 4.0.
 - **Résolution** : surtout 750 × 1000 px.
 - **Composition** : je ne prends que les dossiers de feuilles brutes : 1 057 saines, 126 Black and Yellow Sigatoka, 54 fusarioses (Panama Wilt), 53 dégâts d'insectes, 17 dégâts de skipper. Les dossiers de fruits et les images augmentées ne sont pas utilisés.
-- **Utilisation** : autre moitié du test neuf du 10/11, noté une seule fois. Les deux jeux ensemble font **1 602 photos** : 1 067 saines, 207 Sigatoka, 45 fusarioses et 283 « autre » (Cordana, Pestalotiopsis, insectes, skipper). Liste figée avant toute note (`modeles/maladies_v10/test_neuf/figer_liste.py`).
+- **Utilisation** : autre moitié du test neuf du 10/11, noté une seule fois. Les deux jeux ensemble font **1 602 photos** : 1 067 saines, 207 Sigatoka, 45 fusarioses et 283 « autre » (Cordana, Pestalotiopsis, insectes, skipper). Liste figée avant toute note (`preuves/maladies_v10/test_neuf/figer_liste.py`).
 - **Copies et fuites** : avant de noter, j'ai cherché les copies contre les 58 590 images de tous nos jeux (apprentissage, validation, juges, tests), avec 8 orientations. Une seule photo du test était copiée d'un de nos jeux (banana-buddy) : je l'ai retirée. J'ai aussi trouvé 165 paires de copies à l'intérieur du test : une seule photo est gardée par groupe, et les groupes à deux classes sont retirés.
 - **Biais et limites** : « Black and Yellow Sigatoka » mélange deux maladies ; étiquettes des auteurs, sans expert annoncé ; ce test vient du Bangladesh, comme deux sources d'apprentissage de la v10 (BananaLSD, cm8zf62kzh) et le juge BDR : il favorise la v10.
 
@@ -490,7 +490,7 @@ La méthode trouve les copies d'une même photo, même tournée, retournée, ré
 
 ## Recherche web de jeux de maladies (08/11)
 
-J'ai cherché des jeux publics de photos de maladies du bananier : dépôts scientifiques, Kaggle, Roboflow, Hugging Face, GitHub, articles en plusieurs langues. J'ai trouvé **198 jeux** : 53 déjà connus, 107 sans intérêt et 38 candidats vérifiés. Liste complète : `C:\Field_scan\fiches\jeux_maladies_recherche_2026-11-08.csv`.
+J'ai cherché des jeux publics de photos de maladies du bananier : dépôts scientifiques, Kaggle, Roboflow, Hugging Face, GitHub, articles en plusieurs langues. J'ai trouvé **198 jeux** : 53 déjà connus, 107 sans intérêt et 38 candidats vérifiés.
 
 - Presque aucun jeu public n'est à la fois propre, téléchargeable, pris de près, dans un pays nouveau, avec de la fusariose.
 - Les plus précieux sont **sur demande** : la bibliothèque CGIAR / Bioversity (Afrique, Inde), PlantVillage, les jeux DOST-ASTI des Philippines, et un jeu de Sigatoka noire par stades en Colombie (sans lien publié).

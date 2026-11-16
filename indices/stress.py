@@ -33,8 +33,11 @@ def comparer_saisons(ndmi_par_date, comparables):
     sans zone de vigueur faible aux deux dates. Renvoie (date humide, date sèche, {id: baisse}, ids signalés)."""
     medianes = {d: np.nanmedian(list(v.values())) for d, v in ndmi_par_date.items()}
     humide, seche = max(medianes, key=medianes.get), min(medianes, key=medianes.get)
-    baisse = {i: ndmi_par_date[humide][i] - ndmi_par_date[seche][i] for i in ndmi_par_date[humide]}
-    ref = [baisse[i] for i in comparables if np.isfinite(baisse[i])]
+    # une parcelle cachée par les nuages à l'une des dates n'est pas comparée
+    baisse = {i: ndmi_par_date[humide][i] - ndmi_par_date[seche][i]
+              for i in ndmi_par_date[humide] if i in ndmi_par_date[seche]}
+    comparables = [i for i in comparables if i in baisse and np.isfinite(baisse[i])]
+    ref = [baisse[i] for i in comparables]
     if not ref:
         return humide, seche, baisse, []
     habituelle = float(np.median(ref))

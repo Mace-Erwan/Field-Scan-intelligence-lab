@@ -306,7 +306,7 @@ Le modèle rate surtout les plantations qu'il n'a jamais vues : il faut lui en m
 - **une première notation** de cet essai, faite avec une préparation de Plantain que je n'ai pas conservée, donnait 0,686 contre 0,745 sur Plantain (+0,032 en moyenne). La validation et Banano Finca sont identiques ; seul Plantain change, parce que son échelle doit être supposée. Les deux notations vont dans le même sens ; je garde les chiffres du script, que l'on peut relancer ;
 - en résumé : le nouveau modèle n'est pas meilleur sur les types qu'il connaissait déjà. Il est meilleur sur le plantain, qu'il ne connaissait pas.
 
-Fichiers : poids de l'essai et tableaux du notebook dans `C:\Field_scan\modeles\comptage_v3_essai\`, notation (détections, scores, bilans, un dossier par facteur d'échelle) dans `evaluation_juges\`.
+Les poids de l'essai, les tableaux du notebook et la notation (détections, scores, bilans, un dossier par facteur d'échelle) restent sur mon PC : les poids sont trop lourds pour le dépôt.
 
 **Le seuil vu sur toutes les plantations.** Le seuil d'équilibre se choisit sur la validation, donc sur des plantations du type appris. Or le test de l'organisation mélangera des types de plantations, et ce qui compte au comptage, c'est que fausses alertes et oublis s'équilibrent sur l'ensemble. J'ai donc regardé l'erreur de comptage selon le seuil sur les 5 jeux à la fois (`evaluation_juges\facteur_1.0\scores.csv`) :
 
@@ -326,7 +326,7 @@ Fichiers : poids de l'essai et tableaux du notebook dans `C:\Field_scan\modeles\
 
 Les nouveaux jeux de la v3 ont aidé sur le plantain, pas sur les jeunes bananiers de Banano Finca. J'ajoute deux jeux de bananeraies vues par drone (carnet : banavista et jorges) : `banavista` (photos et orthomosaïques de plantations des Philippines, jeunes et adultes) et `jorges` (orthomosaïque d'une jeune bananeraie). Même recette que l'essai v3, 2 graines (`entrainement/comptage_v4_essai_kaggle.ipynb`) ; `banavista` fait 15 % des morceaux et `jorges` 5 %, les parts des jeux de la v3 sont multipliées par 0,8. Je le compare à l'essai v3, chacun à son seuil d'équilibre.
 
-**Résultat** (notation par `outils/evaluer_comptage.py` ; poids, tableaux du notebook et notation dans `C:\Field_scan\modeles\comptage_v4_essai\`) :
+**Résultat** (notation par `outils/evaluer_comptage.py`) :
 
 | | Essai v3 (seuil 0,25) | Essai v4 (seuil 0,30) | Écart |
 |---|---|---|---|
@@ -389,7 +389,7 @@ Notation par `outils/evaluer_comptage.py`, chaque variante à son seuil d'équil
 | Erreur de compte moyenne (5 jeux, en valeur absolue) | 14,7 % | 15,2 % | 14,6 % | 12,8 % | 13,3 % |
 | **Faux bananiers par hectare sur les palmiers** | 34,8 | 32,2 | 39,3 | **1,1** | 3,4 |
 
-Écarts avec l'essai v3, mesurés sur les mêmes images tirées au hasard (bootstrap apparié, 2 000 tirages ; `C:\Field_scan\modeles\comptage_v6_essai\intervalles\`) :
+Écarts avec l'essai v3, mesurés sur les mêmes images tirées au hasard (bootstrap apparié, 2 000 tirages) :
 - **le hasard d'un entraînement pèse environ 0,02** : le témoin, même recette que la v3 avec d'autres graines, perd 0,022 sur les juges (−0,050 à +0,004) ;
 - **aucune variante ne monte la F1 au-delà de ce hasard**, ni sur la validation ni sur les juges ;
 - `zoom2` ajoute des faux bananiers sur les palmiers (+4,5 par hectare, de +2,6 à +6,6) et perd sur les juges (−0,022, de −0,039 à −0,005) ;
@@ -398,7 +398,7 @@ Notation par `outils/evaluer_comptage.py`, chaque variante à son seuil d'équil
 
 ### Sans apprentissage : une méthode mathématique (07/11/2026)
 
-Une piste du tuteur : trouver les centres des bananiers avec des formules, sans apprentissage. Toutes mes méthodes partent de l'axe de chaque feuille (tenseur de structure, sur les pixels verts), puis en tirent des centres de façons différentes : votes le long des axes (A), modèle de plante en étoile (B), séparation des couronnes (C), modèle objet avec une énergie à minimiser (D), flot vers le cœur (E), feuilles orientées vers leur cœur (F). La méthode finale, M, reprend A avec les votes orientés de F. J'ai aussi essayé de combiner les maths avec le réseau v3, sans le réentraîner (familles H1, H2 et V3P). Tous les paramètres sont des longueurs en mètres. Détail : `C:\Field_scan\recherche_maths\final\SYNTHESE.md`.
+Une piste du tuteur : trouver les centres des bananiers avec des formules, sans apprentissage. Toutes mes méthodes partent de l'axe de chaque feuille (tenseur de structure, sur les pixels verts), puis en tirent des centres de façons différentes : votes le long des axes (A), modèle de plante en étoile (B), séparation des couronnes (C), modèle objet avec une énergie à minimiser (D), flot vers le cœur (E), feuilles orientées vers leur cœur (F). La méthode finale, M, reprend A avec les votes orientés de F. J'ai aussi essayé de combiner les maths avec le réseau v3, sans le réentraîner (familles H1, H2 et V3P). Tous les paramètres sont des longueurs en mètres.
 
 Notation par `outils/evaluer_comptage.py`, chaque méthode à son seuil d'équilibre :
 
@@ -437,7 +437,7 @@ palm3 est installé depuis le 10/11 dans `modeles/comptage/`, au seuil de 0,25. 
 
 ### Le test du 10/11/2026
 
-Le modèle installé (palm3 : 2 réseaux, 4 vues, 16 bits, seuil 0,25), noté une seule fois. Script : `C:\Field_scan\modeles\comptage_test_unique\test_unique.py`.
+Le modèle installé (palm3 : 2 réseaux, 4 vues, 16 bits, seuil 0,25), noté une seule fois. Script et résultats : [`preuves/comptage_test_unique/`](../preuves/comptage_test_unique/).
 - **Nestor** : la ferme de test de ReforesTree, une image à 5 cm par pixel, 235 bananiers. L'intervalle vient de blocs de 20 m tirés au hasard (5 000 tirages), parce que les bananiers d'une même image ne sont pas indépendants.
 - **`segmento`** : la zone de validation et la zone de test du bas se touchent. Les 4 morceaux de test qui bordent la validation (303 bananiers) sont retirés : un bananier coupé par ce bord aurait été vu à moitié pendant l'apprentissage. Il reste 22 morceaux et 2 498 bananiers. L'intervalle vient de morceaux entiers tirés au hasard.
 - **Photos DJI de jeune plantation** (carnet : Plants-bana, photos `DJI_…`) : seuls les plants et les détections à moins de 2 000 px du centre de chaque photo comptent ; les photos sont remises à 5 cm à partir de leur échelle estimée (1,1 cm par pixel). Je note les mères seules, puis tous les plants. Un rejet est « compté » s'il reçoit sa propre détection, c'est-à-dire un pied de plus.
@@ -508,6 +508,57 @@ Ce que j'en retiens :
 - **Ajouter les tests déjà passés aide le champ dense et gêne le plantain.** Le compte de Banano Finca passe de −33 % à −10 %, celui de Detecting Plantain Crops de −8 % à −26 %. Au total, rien ne change sur les juges.
 - **La lecture en deux passes ne gagne rien, mais elle protège d'une échelle fausse.** Quand la taille du pixel est fausse de 25 %, la F1 reste à 0,811 au lieu de tomber à 0,786.
 - **Banano Finca est 2 à 3 fois plus dense que la validation.** Les deux tiers de ses plants ratés ont un score sous le seuil de 0,25. Un seuil qui dépend de la densité reste une piste, à juger sur un jeu dense jamais vu.
+
+### Une image moins fine (14/11/2026)
+
+Question : palm3 tient-il quand le drone vole plus haut ? Chaque image préparée à 5 cm par pixel est réduite à 8, 11, 14 ou 20 cm (moyenne des pixels, comme un capteur plus grossier), puis remise à 5 cm comme dans `run.py`. Seuil installé de 0,25, aucun réglage. Script et résultats : [`preuves/comptage_resolution/`](../preuves/comptage_resolution/).
+
+| Jeu | F1 à 5 cm | 8 cm | 11 cm | 14 cm | 20 cm | Compte à 5 cm | Compte à 11 cm |
+|---|---|---|---|---|---|---|---|
+| Detecting Plantain Crops (juge) | 0,771 | 0,732 | 0,685 | 0,687 | 0,631 | +3,4 % | −41,3 % |
+| Banano Finca (juge) | 0,737 | 0,682 | 0,632 | 0,615 | 0,590 | −34,2 % | −50,6 % |
+| jorges (jamais appris) | 0,806 | 0,804 | 0,789 | 0,773 | 0,763 | −8,4 % | −18,9 % |
+| Manuel (validation) | 0,879 | 0,875 | 0,878 | 0,895 | 0,865 | −1,5 % | −3,0 % |
+| Count banana (validation) | 0,870 | 0,897 | 0,884 | 0,879 | 0,854 | +20,8 % | −5,9 % |
+| `segmento` (validation) | 0,794 | 0,797 | 0,796 | 0,797 | 0,787 | −4,7 % | −3,9 % |
+
+- **La F1 tient mieux que le compte.** Sur les jeux jamais appris, elle perd 0,02 à 0,11 à 11 cm. Le compte, lui, s'effondre : le modèle trouve encore les plants qu'il détecte, mais il en détecte beaucoup moins.
+- **La validation ne voit rien**, parce que le modèle final l'a apprise. Mon premier test (v2, 05/11), fait sur la validation, était donc trop optimiste.
+- **Limite** : une vraie image à 11 cm a aussi son flou, son bruit et sa compression. La simulation ne les a pas : la vraie baisse peut être plus forte.
+- **Conséquence** : le domaine de validité annoncé passe à 5 à 8 cm par pixel.
+
+**Essai d'un seuil qui dépend de la résolution (14 et 15/11).** Règle écrite avant toute mesure ([`preuves/comptage_seuil_resolution/regle.md`](../preuves/comptage_seuil_resolution/regle.md), avec le script, les seuils gelés et le verdict). Le seuil est réglé sur la validation dégradée avec l'essai palm3, qui ne l'a pas apprise : 0,25 jusqu'à 8 cm, 0,20 à 11, 14 et 20 cm. Il est noté une seule fois sur les juges, avec palm3 installé.
+
+| Taille du pixel | F1 des juges, seuil fixe | seuil variable | Faux bananiers par ha sur les palmiers, fixe | variable |
+|---|---|---|---|---|
+| 11 cm | 0,658 | 0,726 | 2,05 | 3,97 |
+| 14 cm | 0,651 | 0,697 | 2,57 | 4,50 |
+| 20 cm | 0,610 | 0,664 | 3,07 | 5,12 |
+
+- L'erreur de compte des juges baisse de 0,431 à 0,329 (de 8 à 20 cm), et la F1 monte. Sur jorges, à 11 cm, le compte passe de −18,9 % à −12,3 %.
+- Mais à 20 cm, les palmiers donnent 5,12 faux bananiers par hectare, pour une limite de 5 écrite avant. **Le seuil variable n'est pas adopté.** Je ne change pas la règle après avoir vu ce résultat, même pour 0,12.
+
+### banana_trees_kp et CG (16/11/2026)
+
+Deux jeux annotés reçus le 16/11, notés une seule fois avec palm3 au seuil 0,25 (protocole écrit avant la note).
+
+| Jeu | Images | Plants | F1 | Précision | Rappel | Erreur de compte |
+|---|---|---|---|---|---|---|
+| banana_trees_kp (photos DJI, jamais vues) | 142 | 21 334 | 0,372 | 0,371 | 0,373 | +0,4 % |
+| CG, pieds mères (ferme Guevara de ReforesTree, agroforesterie, apprise par palm3) | 9 | 290 | 0,522 | 0,776 | 0,393 | −49,3 % |
+
+- **banana_trees_kp** : les photos sont étirées en carré par Roboflow et leur échelle est inconnue. Je leur rends leur format 4:3, puis je ramène l'écart médian entre plants voisins à 2 m. Le compte est juste (+0,4 %), mais une détection sur trois seulement tombe à moins de 1 m d'un point annoté. 10 photos qui ressemblent à mes images sont retirées.
+- **CG** : sous la canopée, palm3 oublie 6 pieds mères sur 10, alors qu'il a appris cette ferme. L'agroforesterie reste hors de son domaine.
+- Un troisième jeu, « segmento est », s'est révélé fait de mes propres tuiles de test et de validation : il n'est pas noté.
+
+### Tests de robustesse de la chaîne (16/11/2026)
+
+L'organisation lancera `run.py` sur ses propres fichiers. J'ai donc fabriqué 15 cas « piégés » à partir des démos (script et bilan : [`preuves/robustesse/`](../preuves/robustesse/)).
+
+- **Avant correction, 4 cas plantaient** : des bandes nommées `B04.tiff` avec la date dans le nom du dossier, une parcelle cachée par les nuages à une des deux dates, des bandes B11 et B12 absentes, une date écrite `20251216`. Les quatre sont corrigés. Le premier a été trouvé sur des zones préparées par quelqu'un d'autre, ce qui montre l'intérêt de ce genre de test.
+- **Après correction, les 15 cas passent** : 14 bulletins écrits, et un message clair pour le dossier vide.
+- **Installation propre** : dans un environnement Python vide, `pip install -r requirements.txt` réussit en 7 min 15 s. La démo redonne exactement le même bulletin et les mêmes probabilités pour les 9 feuilles. Piège rencontré : sous Windows, l'installation de torch échoue si l'environnement est dans un dossier au chemin très long (limite de 260 caractères).
+- **Temps** : une orthomosaïque entière de 858 Mo (Flora Pluas, 1 cm par pixel, 1,55 ha) passe en 4 min 29 s, dont 170 s de comptage (110 s par hectare), sur mon PC sans GPU.
 
 ## 2. Maladies
 
@@ -740,7 +791,7 @@ La recette de la v2 à l'identique, avec un seul changement : les photos en 384 
 
 Seuils de la v6 : alerte 0,40, nom 0,50, confiance 0,685.
 
-Sur les juges de la lecture en 384 px (600 photos de Tanzanie, BDR), la v6 fait 95 % de saines bien classées en Tanzanie (96 % pour la v2), nomme 88,1 % des Sigatoka de BDR (85,1 %) et 56,1 % de ses fusarioses (43,9 %). Mais elle dit saines 20 des 86 feuilles à dégâts d'insectes de BDR, contre 9 pour la v2 (détail : `C:\Field_scan\modeles\maladies_zoom\resultats_juges_finalistes.txt`).
+Sur les juges de la lecture en 384 px (600 photos de Tanzanie, BDR), la v6 fait 95 % de saines bien classées en Tanzanie (96 % pour la v2), nomme 88,1 % des Sigatoka de BDR (85,1 %) et 56,1 % de ses fusarioses (43,9 %). Mais elle dit saines 20 des 86 feuilles à dégâts d'insectes de BDR, contre 9 pour la v2 (détail : [`preuves/maladies_zoom/resultats_juges_finalistes.txt`](../preuves/maladies_zoom/resultats_juges_finalistes.txt)).
 
 ### Trois lectures de la v2 sur des jeux neufs (09/11/2026)
 
@@ -815,7 +866,7 @@ cm8zf62kzh (Bangladesh, 224 px), godliver (Ouganda probable, fond blanc) et BLAD
 
 ### v10 : plus de sources, une classe « autre » et DINOv3 (nuit du 09 au 10/11/2026)
 
-Détail : `C:\Field_scan\modeles\maladies_v10\rapport.md`.
+Détail : [`preuves/maladies_v10/rapport.md`](../preuves/maladies_v10/rapport.md).
 
 #### Ce qui change
 
@@ -973,6 +1024,7 @@ Ici, pas d'apprentissage : des indices calculés à partir des bandes, et des r�
 
 **Les règles :**
 - **vigueur faible** : un indice sous 80 % du niveau normal de la plantation (75e centile). La règle est relative, parce que le niveau normal change d'un site, d'une saison et d'un capteur à l'autre ;
+- **taches de vigueur faible** (depuis le 14/11) : la même règle à l'intérieur de chaque parcelle, avec le niveau normal de la parcelle. Elle trouve les zones moins vigoureuses que le reste de la parcelle, comme le demande le sujet, même dans une parcelle qui va bien face aux autres ;
 - **manque d'eau probable** : un NDMI plus bas de 0,05 que ce qu'on attend pour sa quantité de feuillage. J'ajuste une droite NDMI = a + b × NDVI sur la plantation : une parcelle clairsemée a naturellement un NDMI bas, et ne doit pas passer pour sèche ;
 - **saisons** : avec deux dates, une parcelle est signalée si son NDMI baisse de plus de 0,05 de plus que les autres parcelles comparables entre la saison humide et la saison sèche.
 
@@ -983,7 +1035,7 @@ Ici, pas d'apprentissage : des indices calculés à partir des bandes, et des r�
 
 #### Ablation des bandes (09/11/2026)
 
-Qu'apporte chaque bande ? Je refais les cartes de `run.py` en changeant une seule chose à la fois (l'indice, ou une bande), avec les mêmes règles et les mêmes masques. Sans vérité terrain, je mesure ce que change chaque bande, pas laquelle a raison. Mesures : part de la plantation signalée, parcelles en alerte (note sous 70, comme le bulletin), et accord avec la carte actuelle (Jaccard sur les pixels signalés : 1 = mêmes pixels, 0 = aucun en commun). Détail : `C:\Field_scan\analyses\ablation_bandes\resultats.md`.
+Qu'apporte chaque bande ? Je refais les cartes de `run.py` en changeant une seule chose à la fois (l'indice, ou une bande), avec les mêmes règles et les mêmes masques. Sans vérité terrain, je mesure ce que change chaque bande, pas laquelle a raison. Mesures : part de la plantation signalée, parcelles en alerte (note sous 70, comme le bulletin), et accord avec la carte actuelle (Jaccard sur les pixels signalés : 1 = mêmes pixels, 0 = aucun en commun). Détail : [`preuves/ablation_bandes/resultats.md`](../preuves/ablation_bandes/resultats.md).
 
 | Vigueur | Cameroun 16/12/2025 | Cameroun 20/04/2026 | Équateur (31/03 et 22/09/2026) |
 |---|---|---|---|

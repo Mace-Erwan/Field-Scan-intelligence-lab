@@ -29,6 +29,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
+from PIL import Image
 from rasterio.features import geometry_mask, shapes
 from shapely.geometry import Point, shape
 from shapely.ops import unary_union
@@ -58,6 +59,18 @@ def zones_en_polygones(masque, transform, crs, surface_min_m2=0.0):
 
 def note(part_signalee):
     return int(round(100 * (1 - part_signalee)))
+
+
+def note_maladies(reponses):
+    """Note maladies d'une parcelle, par gravité :
+    - toutes les feuilles saines : 100 (vert) ;
+    - seulement des « je ne sais pas » (à vérifier) : 75 (orange) ;
+    - au moins une feuille malade (maladie nommée ou non identifiée) : sous 70 (rouge), d'autant plus bas
+      que la part de feuilles malades est grande (65 x la part de feuilles non malades)."""
+    malades = reponses.isin(["black_sigatoka", "fusarium", "malade_non_identifiee"])
+    if malades.any():
+        return int(round(65 * (1 - malades.mean())))
+    return 75 if (reponses == "inconnu").any() else 100
 
 
 def partie_comptage(images_drone, parcelles, mesures, sortie, avertissements):
@@ -126,21 +139,25 @@ def partie_vigueur_drone(images_drone, parcelles, mesures, sortie, alertes_zones
         print(f"  {nom} : végétation si ExG > {seuil_exg:.3f} ; couverture de référence {100 * ref:.0f} % "
               f"(cases de 10 m), zones faibles sous {100 * vigueur.FRACTION_NORMALE * ref:.0f} %")
         for i, m in masques.items():
-            part = float(faible[m].mean())
+            taches = vigueur.taches_faibles(couv, m)
+            vig = (faible | taches) & m
+            part_p, part_t, part = float(faible[m].mean()), float(taches[m].mean()), float(vig[m].mean())
             mesures[i]["vari"] = round(float(np.nanmedian(vari_case[m])), 3)
             mesures[i]["couverture_vegetale_%"] = round(100 * float(np.nanmean(couv[m])), 1)
-            mesures[i]["vigueur_drone_faible_%"] = round(100 * part, 1)
+            mesures[i]["vigueur_drone_faible_%"] = round(100 * part_p, 1)
+            mesures[i]["vigueur_drone_taches_%"] = round(100 * part_t, 1)
             if utiliser_pour_note:
                 mesures[i]["note_vigueur"] = note(part)
-                zones = zones_en_polygones(faible & m, t_case, profil["crs"])
+                zones = zones_en_polygones(vig, t_case, profil["crs"])
                 geom = p_utm[p_utm.id == i].geometry.iloc[0]
                 png = f"apercus/vigueur_drone_parcelle_{i}.png"
-                apercus.apercu(sortie / png, im["chemin"], profil["crs"], geom, zones, (255, 140, 0),
-                               f"Parcelle {i} - vigueur faible (ExG) en orange - {im['chemin'].name}")
+                apercus.apercu(sortie / png, im["chemin"], profil["crs"], geom, zones, (255, 140, 0), "")
                 mesures[i]["_alerte_vigueur"] = {
-                    "message": f"vigueur faible (peu de végétation, ExG) sur {100 * part:.0f} % de la parcelle (image drone)",
+                    "message": f"vigueur faible (peu de végétation, ExG) sur {100 * part:.0f} % de la parcelle : "
+                               f"{100 * part_p:.0f} % sous le niveau de la plantation, {100 * part_t:.0f} % sous le "
+                               f"niveau du reste de la parcelle (image drone)",
                     "source": im["chemin"].name, "apercu": png}
-                if zones is not None:
+                if zones is not None and note(part) < bulletin.SEUIL_ALERTE:
                     alertes_zones.append({"parcelle": i, "theme": "vigueur", "geometry": zones, "crs": profil["crs"]})
 
 
@@ -159,44 +176,60 @@ def partie_sentinel2(dates, parcelles, mesures, sortie, alertes_zones):
             if m.any():
                 masques[r["id"]] = m
                 dans |= m
-        faible, ref = vigueur.zones_faibles(indices["ndvi"], dans)
-        seche, droite = stress.zones_seches(indices["ndvi"], indices["ndmi"], dans & ~faible)
-        par_date[d] = dict(indices=indices, profil=profil, masques=masques, faible=faible, seche=seche,
-                           ref=ref, droite=droite, bandes=bandes, crs=p.crs, parcelles=p)
+        faible, ref = vigueur.zones_faibles(indices["ndvi"], dans)          # face à la plantation
+        taches = np.zeros(faible.shape, bool)                               # face au reste de la parcelle
+        for m in masques.values():
+            taches |= vigueur.taches_faibles(indices["ndvi"], m)
+        if "ndmi" in indices:
+            seche, droite = stress.zones_seches(indices["ndvi"], indices["ndmi"], dans & ~(faible | taches))
+        else:                                                               # B8A ou B11 absente : pas d'eau
+            seche, droite = np.zeros(faible.shape, bool), (np.nan, np.nan)
+        par_date[d] = dict(indices=indices, profil=profil, masques=masques, faible=faible, taches=taches,
+                           seche=seche, ref=ref, droite=droite, bandes=bandes, crs=p.crs, parcelles=p)
         faibles_par_date[d] = {i: float(faible[m].mean()) for i, m in masques.items()}
-        ndmi_par_date[d] = {i: float(np.nanmedian(indices["ndmi"][m])) for i, m in masques.items()}
+        if "ndmi" in indices:
+            ndmi_par_date[d] = {i: float(np.nanmedian(indices["ndmi"][m])) for i, m in masques.items()}
         print(f"  {d} : NDVI de référence {ref:.3f} (zones faibles sous {vigueur.FRACTION_NORMALE * ref:.3f}) ; "
-              f"NDMI attendu = {droite[0]:.3f} + {droite[1]:.3f} x NDVI")
+              + (f"NDMI attendu = {droite[0]:.3f} + {droite[1]:.3f} x NDVI" if "ndmi" in indices
+                 else "pas de NDMI (bande B8A ou B11 absente) : stress hydrique non calculé"))
 
     actuelle = max(par_date)
     a = par_date[actuelle]
     ecrire_tif(sortie / "vigueur.tif", a["indices"]["ndvi"], a["profil"])
-    residu = a["indices"]["ndmi"] - (a["droite"][0] + a["droite"][1] * a["indices"]["ndvi"])
-    ecrire_tif(sortie / "stress.tif", residu, a["profil"])
+    eau = "ndmi" in a["indices"]
+    if eau:
+        residu = a["indices"]["ndmi"] - (a["droite"][0] + a["droite"][1] * a["indices"]["ndvi"])
+        ecrire_tif(sortie / "stress.tif", residu, a["profil"])
     for i, m in a["masques"].items():
         mi = mesures[i]
         for k in ("ndvi", "ndre", "ndmi"):
             if k in a["indices"]:
                 mi[f"{k}_{actuelle}"] = round(float(np.nanmedian(a["indices"][k][m])), 3)
-        part_f, part_s = float(a["faible"][m].mean()), float(a["seche"][m].mean())
-        mi["vigueur_faible_%"], mi["eau_faible_%"] = round(100 * part_f, 1), round(100 * part_s, 1)
-        mi["note_vigueur"], mi["note_eau"] = note(part_f), note(part_s)
+        vig = a["faible"] | a["taches"]
+        part_p, part_t = float(a["faible"][m].mean()), float(a["taches"][m].mean())
+        part_v, part_s = float(vig[m].mean()), float(a["seche"][m].mean())
+        mi["vigueur_faible_%"], mi["vigueur_taches_%"] = round(100 * part_p, 1), round(100 * part_t, 1)
+        mi["note_vigueur"] = note(part_v)
+        if eau:
+            mi["eau_faible_%"], mi["note_eau"] = round(100 * part_s, 1), note(part_s)
         geom = a["parcelles"][a["parcelles"].id == i].geometry.iloc[0]
-        for theme, masque, couleur, texte in (("vigueur", a["faible"], (255, 140, 0), "vigueur faible (NDVI)"),
-                                              ("eau", a["seche"], (0, 160, 255), "manque d'eau probable (NDMI)")):
-            part = float(masque[m].mean())
-            if note(part) >= bulletin.SEUIL_ALERTE:
+        texte_vig = (f"vigueur faible (NDVI) sur {100 * part_v:.0f} % de la parcelle : {100 * part_p:.0f} % sous le "
+                     f"niveau de la plantation, {100 * part_t:.0f} % sous le niveau du reste de la parcelle")
+        themes = [("vigueur", vig, (255, 140, 0), texte_vig)]
+        if eau:
+            themes.append(("eau", a["seche"], (0, 160, 255), f"manque d'eau probable (NDMI) sur {100 * part_s:.0f} % de la parcelle"))
+        for theme, masque, couleur, texte in themes:
+            if note(float(masque[m].mean())) >= bulletin.SEUIL_ALERTE:
                 continue
             zones = zones_en_polygones(masque & m, a["profil"]["transform"], a["crs"])
             png = f"apercus/{theme}_parcelle_{i}_{actuelle}.png"
-            apercus.apercu(sortie / png, a["bandes"], a["crs"], geom, zones, couleur,
-                           f"Parcelle {i} - {texte} - Sentinel-2 du {actuelle}")
-            mi[f"_alerte_{theme}"] = {"message": f"{texte} sur {100 * part:.0f} % de la parcelle (Sentinel-2 du {actuelle})",
+            apercus.apercu(sortie / png, a["bandes"], a["crs"], geom, zones, couleur, "")
+            mi[f"_alerte_{theme}"] = {"message": f"{texte} (Sentinel-2 du {actuelle})",
                                       "source": f"Sentinel-2 {actuelle} ({a['bandes']['B04'].name})", "apercu": png}
             if zones is not None:
                 alertes_zones.append({"parcelle": i, "theme": theme, "geometry": zones, "crs": a["crs"]})
 
-    if len(par_date) >= 2:
+    if len(ndmi_par_date) >= 2 and actuelle in ndmi_par_date:
         comparables = [i for i in ndmi_par_date[actuelle]
                        if all(faibles_par_date[d].get(i, 1) < 0.3 for d in par_date)]
         humide, seche_d, baisse, signales = stress.comparer_saisons(ndmi_par_date, comparables)
@@ -253,10 +286,11 @@ def partie_feuilles(photos, parcelles, mesures, sortie):
         mi["photos_feuilles"] = len(g)
         mi["feuilles_malades"] = int(g.reponse.isin(["black_sigatoka", "fusarium", "malade_non_identifiee"]).sum())
         mi["feuilles_inconnu"] = int((g.reponse == "inconnu").sum())
-        mi["note_maladies"] = note(1 - (g.reponse == "saine").mean())
-        n_alerte = int((g.reponse != "saine").sum())
-        mi["_alerte_maladies"] = {"message": f"{n_alerte} feuille(s) en alerte sur {len(g)} photo(s) (détail ci-dessous)",
-                                  "source": "photos de feuilles de la parcelle", "apercu": ""}
+        mi["note_maladies"] = note_maladies(g.reponse)
+        n_malades, n_inconnu = mi["feuilles_malades"], mi["feuilles_inconnu"]
+        texte = (f"{n_malades} feuille(s) malade(s)" if n_malades else "aucune feuille sûrement malade") + \
+                (f", {n_inconnu} à vérifier" if n_inconnu else "") + f", sur {len(g)} photo(s) (détail ci-dessous)"
+        mi["_alerte_maladies"] = {"message": texte, "source": "photos de feuilles de la parcelle", "apercu": ""}
         for k, (_, f) in enumerate(g[g.reponse != "saine"].iterrows()):
             png = f"apercus/feuille_parcelle_{i}_{k + 1}.png"
             apercus.miniature_photo(f.photo, sortie / png, f"{f.reponse} (confiance {f.confiance})")
@@ -341,15 +375,29 @@ def main():
     t, l, h = apercus.grille(p_utm.total_bounds, 900)
     fond = None
     source_fond = s2["bandes"] if s2 else (drone[0]["chemin"] if drone else None)
+    calques = []                                      # (identifiant, nom affiché, image PNG)
     if source_fond is not None:
         apercus.rendre(source_fond, utm, t, l, h).save(sortie / "fond.png")
         fond = ("fond.png", l, h)
+        calques.append(("image", "Image", "fond.png"))
+    if s2:                                            # cartes Sentinel-2 de la date la plus récente
+        dans = geometry_mask(list(p_utm.geometry), out_shape=(h, l), transform=t, invert=True)   # hors parcelles : transparent
+        for cle, nom, tif, png, palette, bornes in (
+                ("vigueur", "Vigueur (NDVI)", "vigueur.tif", "calque_vigueur.png", apercus.PALETTE_VIGUEUR, (0.2, 0.9)),
+                ("eau", "Eau (NDMI)", "stress.tif", "calque_eau.png", apercus.PALETTE_EAU, (-0.1, 0.1))):
+            if cle == "eau" and "ndmi" not in s2["indices"]:      # pas de NDMI : pas de calque eau
+                continue
+            img = np.array(apercus.rendre_carte(sortie / tif, utm, t, l, h, palette, *bornes))
+            img[..., 3] = np.where(dans, img[..., 3], 0)
+            Image.fromarray(img, "RGBA").save(sortie / png)
+            calques.append((cle, nom, png))
     parcelles_px = {r["id"]: apercus.anneaux_px(r.geometry, t) for _, r in p_utm.iterrows()}
     pieds_px = []
     if pieds_gdf is not None and len(pieds_gdf):
         inverse = ~t
         pieds_px = [inverse * (pt.x, pt.y) for pt in pieds_gdf.to_crs(utm).geometry]
-    bulletin.ecrire_html(sortie / "bulletin.html", tableau, alertes, fond, parcelles_px, pieds_px, sources, avertissements)
+    bulletin.ecrire_html(sortie / "bulletin.html", tableau, alertes, fond, parcelles_px, pieds_px, sources, avertissements,
+                         calques)
 
     with pd.option_context("display.width", 200, "display.max_columns", 30):
         print(tableau.drop(columns=["alertes"]).to_string(index=False))
