@@ -72,11 +72,8 @@ La F1 compte une détection juste si elle tombe à moins de 1 m du cœur d'un vr
 
 Elle rate très peu de malades, même dans des pays qu'elle n'a jamais vus : sur AgroVisionBD, 2 Sigatoka ou fusarioses ratées sur 468. En échange, elle alerte sur des feuilles saines mais abîmées (trous d'insectes, déchirures), et elle nomme rarement la maladie.
 
-![Une feuille saine, une cercosporiose et une fusariose, vues de près](docs/images/maladies_gros_plans.jpg)
-*Ce que le modèle apprend à reconnaître, en gros plan : une feuille saine, la cercosporiose (Sigatoka noire, des taches brunes cernées de jaune) et la fusariose (la feuille jaunit par le bord). Photos de Tanzanie 2023 (CC0), qui font partie de l'apprentissage.*
-
-![9 gros plans de feuilles et la réponse du modèle](docs/images/maladies_demo_reponses.jpg)
-*9 gros plans du Bangladesh (AgroVisionBD, un jeu de test que le modèle n'a jamais appris), recadrés sur la feuille avant de lancer le modèle : il lit exactement l'image affichée. Les 6 feuilles malades ont toutes une alerte, et les 3 saines sont dites saines. La cercosporiose est nommée 2 fois sur 3. Les fusarioses restent « malade, non identifiée » : le modèle voit la maladie, mais il n'est pas assez sûr du nom pour le donner. Script : [`preuves/maladies_planche/`](preuves/maladies_planche/).*
+![Trois feuilles du test et la réponse du modèle](docs/images/maladies_trois_exemples.jpg)
+*Trois gros plans du Bangladesh (AgroVisionBD, un jeu de test que le modèle n'a jamais appris), avec la réponse du modèle. La cercosporiose est nommée. La fusariose reçoit bien une alerte, mais le modèle n'est pas assez sûr du nom et répond « malade, non identifiée ». La feuille saine est dite saine. Script : [`preuves/maladies_planche/`](preuves/maladies_planche/).*
 
 ### Ce qui n'a pas marché
 
@@ -164,4 +161,4 @@ Les données ne sont pas dans le dépôt : leurs sources sont décrites dans le 
 
 - Les modèles de maladies utilisent les poids DINOv3 : Built with DINOv3.
 - Les cartes Sentinel-2 : Contains modified Copernicus Sentinel data 2025, 2026.
-- Les photos de feuilles du bulletin viennent d'AgroVisionBD (CC BY 4.0), les gros plans de Tanzanie 2023 (CC0). La parcelle de Manuel vient de ReforesTree (CC BY 4.0).
+- Les photos de feuilles viennent d'AgroVisionBD (CC BY 4.0). La parcelle de Manuel vient de ReforesTree (CC BY 4.0).
