@@ -4,9 +4,6 @@ Field Scan regarde une bananeraie d'en haut et sort un bulletin de santé, parce
 
 Projet piscine Intelligence Lab, ECE.
 
-![Bulletin de la démo : 15 parcelles au Cameroun, Sentinel-2 à deux dates, 9 photos de feuilles](docs/images/bulletin_demo.jpg)
-*Le bulletin de la démo du 14/11/2026 : 15 parcelles au Cameroun, Sentinel-2 à deux dates et 9 photos de feuilles prises de près. En haut, les chiffres clés. La carte colore chaque parcelle par son score de santé, et on peut y afficher la vigueur ou l’eau. Un clic sur une parcelle ouvre sa fiche (ici la parcelle 11) : ses trois notes, ses alertes et les photos de feuilles en cause.*
-
 ## Le projet
 
 Un planteur veut savoir, pour chaque parcelle : combien de pieds il a, lesquels poussent mal, où l'eau manque, et si une maladie arrive. Aller voir chaque bananier prend des jours. Field Scan part de ce qu'on peut photographier vite : un vol de drone, deux images satellite gratuites, et quelques photos de feuilles prises au sol avec un téléphone.
